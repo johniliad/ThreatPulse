@@ -1,0 +1,536 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ThreatPulse CTI API — Documentation</title>
+    <meta
+      name="description"
+      content="Documentation for the ThreatPulse cyber threat intelligence API: read-only endpoints for threats, vulnerabilities, sources, attribution, publications, publication changes and source health."
+    />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="theme-color" content="#075e65" />
+    <link rel="icon" href="/favicon.ico" sizes="48x48" />
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #ffffff;
+        --fg: #14211f;
+        --muted: #5b6b68;
+        --line: #d8e2e0;
+        --accent: #075e65;
+        --accent-soft: #e6f2f2;
+        --code-bg: #f4f7f7;
+        --warn-bg: #fff6e5;
+        --warn-fg: #6b4700;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0d1618;
+          --fg: #e6eeed;
+          --muted: #9db0ad;
+          --line: #23383b;
+          --accent: #5fd0d0;
+          --accent-soft: #10292b;
+          --code-bg: #122023;
+          --warn-bg: #2c2210;
+          --warn-fg: #f0c778;
+        }
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--fg);
+        font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Helvetica, Arial, sans-serif;
+      }
+      main { max-width: 62rem; margin: 0 auto; padding: 2.5rem 1.25rem 5rem; }
+      h1 { font-size: clamp(1.6rem, 4vw, 2.2rem); margin: 0 0 0.35rem; }
+      h2 {
+        font-size: 1.25rem;
+        margin: 2.75rem 0 0.75rem;
+        padding-bottom: 0.4rem;
+        border-bottom: 1px solid var(--line);
+      }
+      h3 { font-size: 1.02rem; margin: 1.9rem 0 0.4rem; }
+      p, li { color: var(--fg); }
+      .lede { color: var(--muted); font-size: 1.02rem; margin: 0 0 1.5rem; }
+      .muted { color: var(--muted); }
+      a { color: var(--accent); }
+      code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 0.88em;
+        background: var(--code-bg);
+        padding: 0.1em 0.35em;
+        border-radius: 4px;
+        overflow-wrap: anywhere;
+      }
+      pre {
+        background: var(--code-bg);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 0.85rem 1rem;
+        overflow-x: auto;
+        font-size: 0.86rem;
+        line-height: 1.5;
+      }
+      pre code { background: none; padding: 0; }
+      table { border-collapse: collapse; width: 100%; margin: 0.5rem 0 1rem; }
+      th, td {
+        text-align: left;
+        padding: 0.45rem 0.6rem;
+        border-bottom: 1px solid var(--line);
+        vertical-align: top;
+        font-size: 0.93rem;
+      }
+      th { color: var(--muted); font-weight: 600; }
+      .endpoint {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        align-items: baseline;
+        margin-bottom: 0.5rem;
+      }
+      .verb {
+        background: var(--accent-soft);
+        color: var(--accent);
+        border-radius: 5px;
+        padding: 0.1rem 0.5rem;
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+      }
+      .path { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.95rem; }
+      .box {
+        border: 1px solid var(--line);
+        border-left: 3px solid var(--accent);
+        border-radius: 8px;
+        padding: 0.9rem 1.1rem;
+        margin: 1.25rem 0;
+      }
+      .warn {
+        background: var(--warn-bg);
+        color: var(--warn-fg);
+        border: 1px solid var(--line);
+        border-left: 3px solid var(--warn-fg);
+        border-radius: 8px;
+        padding: 0.9rem 1.1rem;
+        margin: 1.25rem 0;
+        font-size: 0.93rem;
+      }
+      footer {
+        margin-top: 3.5rem;
+        padding-top: 1.25rem;
+        border-top: 1px solid var(--line);
+        color: var(--muted);
+        font-size: 0.88rem;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>ThreatPulse CTI API</h1>
+      <p class="lede">
+        Read-only cyber threat intelligence: prioritised vulnerability threat
+        records, the vulnerabilities behind them, the attribution register, and
+        publication history. Version <strong>1.0</strong>.
+      </p>
+
+      <div class="box">
+        <strong>Base URL</strong>
+        <pre><code>https://threatpulse.iliadis.net/api/cti/v1/</code></pre>
+        <p class="muted" style="margin: 0">
+          Every endpoint below is relative to it. Discovery lives at
+          <a href="cti/v1/">cti/v1/</a>.
+        </p>
+      </div>
+
+      <h2>Access</h2>
+      <p>
+        The read endpoints are <strong>open</strong>: no key, no token, no
+        allowlist. They are called directly from the browser, so they have to be.
+        Nothing about the public contract needs authentication.
+      </p>
+      <p>
+        The single exception is <code>publish.php</code>, the write endpoint the
+        ThreatPulse pipeline uses. It is limited to a fixed set of source
+        addresses <em>and</em> requires a bearer token. It is not part of this
+        contract and is documented in the deployment notes instead.
+      </p>
+      <ul>
+        <li><strong>Read-only.</strong> Only <code>GET</code> (and
+          <code>OPTIONS</code> for pre-flight) is accepted. Anything else returns
+          <code>405</code> with an <code>Allow</code> header.</li>
+        <li><strong>CORS.</strong> <code>Access-Control-Allow-Origin: *</code> on
+          the read endpoints.</li>
+        <li><strong>Caching.</strong> <code>Cache-Control: public, max-age=60</code>.</li>
+        <li><strong>Attribution.</strong> The
+          <a href="cti/v1/attribution.php">attribution register</a> lists every
+          declared source with its licence and terms. Reuse of the data is
+          subject to those upstream terms, not to a ThreatPulse licence.</li>
+      </ul>
+
+      <h2>Response envelope</h2>
+      <p>Every list endpoint returns the same shape:</p>
+      <pre><code>{
+  "status": "ok",
+  "api_version": "1.0",
+  "data": { "&lt;collection&gt;": [ ... ] },
+  "pagination": {
+    "limit": 50,
+    "offset": 0,
+    "returned": 50,
+    "total": 1917,
+    "has_more": true
+  },
+  "timestamp": "2026-11-01T17:46:10+00:00"
+}</code></pre>
+      <p class="muted">
+        <code>data</code> is keyed by collection name — <code>threats</code>,
+        <code>vulnerabilities</code>,
+        <code>sources</code>, <code>attribution</code>,
+        <code>publications</code>, <code>changes</code>,
+        <code>source_health</code> — and the key matches the endpoint.
+      </p>
+
+      <h2>Pagination</h2>
+      <p>
+        Every list endpoint accepts <code>limit</code> and <code>offset</code>.
+        <code>limit</code> defaults to <strong>50</strong> and is clamped to
+        <strong>1–100</strong>; <code>offset</code> defaults to
+        <strong>0</strong> and cannot be negative. Out-of-range values are
+        clamped rather than rejected. Page with <code>offset</code> while
+        <code>has_more</code> is <code>true</code>, or use
+        <code>pagination.total</code>.
+      </p>
+
+      <h2>Errors</h2>
+      <p>Failures return the HTTP status and a JSON body of this shape:</p>
+      <pre><code>{ "status": "error", "message": "Invalid severity.",
+  "allowed_values": ["critical", "high", "medium", "low", "informational"] }</code></pre>
+      <table>
+        <thead>
+          <tr><th>Status</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>400</code></td><td>A parameter is invalid. <code>message</code> says which; validation errors may add <code>allowed_values</code>.</td></tr>
+          <tr><td><code>403</code></td><td>Reserved for the write endpoint: the calling address is not on its allowlist. The read endpoints above never return it.</td></tr>
+          <tr><td><code>404</code></td><td>No record for the requested identifier.</td></tr>
+          <tr><td><code>405</code></td><td>Wrong HTTP method; see the <code>Allow</code> header.</td></tr>
+          <tr><td><code>500</code></td><td>Server-side failure. The body reports <code>error_class</code> and <code>error_message</code>.</td></tr>
+          <tr><td><code>503</code></td><td>No publication is available yet.</td></tr>
+        </tbody>
+      </table>
+
+      <h2>Endpoints</h2>
+
+      <h3>
+        <span class="endpoint">
+          <span class="verb">GET</span>
+          <span class="path">cti/v1/</span>
+          <span class="muted">— discovery</span>
+        </span>
+      </h3>
+      <p>
+        Machine-readable index: the endpoint list, API capabilities and a pointer
+        to the attribution register. Intended as the entry point for clients that
+        should not hard-code what is available.
+      </p>
+      <pre><code>curl -s https://threatpulse.iliadis.net/api/cti/v1/</code></pre>
+      <pre><code>{
+  "status": "ok",
+  "service": "ThreatPulse CTI API",
+  "api_version": "1.0",
+  "documentation": { "threats": "/api/cti/v1/threats.php", ... },
+  "capabilities": { "read_only": true, "pagination": true, "cve_lookup": true, ... },
+  "data_provenance": { "attribution_endpoint": "/api/cti/v1/attribution.php" }
+}</code></pre>
+
+      <h3>
+        <span class="endpoint">
+          <span class="verb">GET</span>
+          <span class="path">cti/v1/status.php</span>
+          <span class="muted">— liveness</span>
+        </span>
+      </h3>
+      <p>Cheap health check. No database access, no parameters.</p>
+      <pre><code>curl -s https://threatpulse.iliadis.net/api/cti/v1/status.php</code></pre>
+      <pre><code>{ "status": "ok", "service": "iliadis-cti-api", "version": "0.1.0" }</code></pre>
+
+      <h3>
+        <span class="endpoint">
+          <span class="verb">GET</span>
+          <span class="path">cti/v1/threats.php</span>
+          <span class="muted">— prioritised threats</span>
+        </span>
+      </h3>
+      <p>
+        The main surface: correlated threat records with severity, priority and
+        confidence, the vulnerabilities behind them, and the sources that
+        reported them.
+      </p>
+      <table>
+        <thead>
+          <tr><th>Parameter</th><th>Type</th><th>Notes</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>limit</code></td><td>int</td><td>1–100, default 50.</td></tr>
+          <tr><td><code>offset</code></td><td>int</td><td>Default 0.</td></tr>
+          <tr><td><code>severity</code></td><td>enum</td><td><code>critical</code>, <code>high</code>, <code>medium</code>, <code>low</code>, <code>informational</code>.</td></tr>
+          <tr><td><code>exploitation_status</code></td><td>enum</td><td><code>confirmed</code>, <code>suspected</code>, <code>unknown</code>, <code>not_exploited</code>.</td></tr>
+          <tr><td><code>cve</code></td><td>string</td><td><code>CVE-YYYY-NNNN…</code>, normalised to uppercase. Resolves the CVE to the threats it is associated with.</td></tr>
+        </tbody>
+      </table>
+      <pre><code># Critical threats, newest first page
+curl -s "https://threatpulse.iliadis.net/api/cti/v1/threats.php?severity=critical&amp;limit=25"
+
+# Which threats is this CVE behind?
+curl -s "https://threatpulse.iliadis.net/api/cti/v1/threats.php?cve=CVE-2026-109619"</code></pre>
+      <pre><code>{
+  "status": "ok",
+  "api_version": "1.0",
+  "data": { "threats": [ { "threat_uuid": "...", "severity": "critical", ... } ] },
+  "pagination": { "limit": 25, "offset": 0, "returned": 25, "total": 26, "has_more": true },
+  "timestamp": "2026-11-01T17:46:10+00:00"
+}</code></pre>
+      <p class="muted">
+        An invalid <code>cve</code> returns <code>400</code> rather than an empty
+        list, so a typo is distinguishable from a CVE with no threats.
+      </p>
+
+      <h3>
+        <span class="endpoint">
+          <span class="verb">GET</span>
+          <span class="path">cti/v1/threat.php</span>
+          <span class="muted">— one threat</span>
+        </span>
+      </h3>
+      <table>
+        <thead>
+          <tr><th>Parameter</th><th>Required</th><th>Notes</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>uuid</code></td><td>yes</td><td>The threat's <code>threat_uuid</code>.</td></tr>
+        </tbody>
+      </table>
+      <pre><code>curl -s "https://threatpulse.iliadis.net/api/cti/v1/threat.php?uuid=THREAT_UUID"</code></pre>
+      <p class="muted">
+        Returns <code>404</code> for an unknown identifier and <code>400</code>
+        when <code>uuid</code> is missing.
+      </p>
+
+      <h3>
+        <span class="endpoint">
+          <span class="verb">GET</span>
+          <span class="path">cti/v1/vulnerabilities.php</span>
+          <span class="muted">— CVE records</span>
+        </span>
+      </h3>
+      <p>
+        Vulnerability records with CVSS, severity, KEV status and the threats each
+        one is associated with.
+      </p>
+      <table>
+        <thead>
+          <tr><th>Parameter</th><th>Type</th><th>Notes</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>limit</code></td><td>int</td><td>1–100, default 50.</td></tr>
+          <tr><td><code>offset</code></td><td>int</td><td>Default 0.</td></tr>
+          <tr><td><code>cve</code></td><td>string</td><td>Exact CVE identifier, uppercased.</td></tr>
+          <tr><td><code>severity</code></td><td>enum</td><td><code>critical</code>, <code>high</code>, <code>medium</code>, <code>low</code>, <code>informational</code>.</td></tr>
+          <tr><td><code>kev_listed</code></td><td>bool</td><td><code>true</code> or <code>false</code> — restrict to CISA KEV entries, or to everything else.</td></tr>
+        </tbody>
+      </table>
+      <pre><code>curl -s "https://threatpulse.iliadis.net/api/cti/v1/vulnerabilities.php?kev_listed=true&amp;limit=10"</code></pre>
+
+      <h3>
+        <span class="endpoint">
+          <span class="verb">GET</span>
+          <span class="path">cti/v1/sources.php</span>
+          <span class="muted">— source health</span>
+        </span>
+      </h3>
+      <p>
+        Every declared source with its type, reliability and how many records it
+        currently contributes — including sources that are declared but
+        contributing nothing, which is the point of the endpoint.
+      </p>
+      <table>
+        <thead>
+          <tr><th>Parameter</th><th>Type</th><th>Notes</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>limit</code></td><td>int</td><td>1–100, default 50.</td></tr>
+          <tr><td><code>offset</code></td><td>int</td><td>Default 0.</td></tr>
+          <tr><td><code>source_key</code></td><td>string</td><td>Exact source key, for example <code>cisa_kev</code>.</td></tr>
+          <tr><td><code>source_type</code></td><td>string</td><td>Filter by source type, lowercased.</td></tr>
+        </tbody>
+      </table>
+      <pre><code>curl -s "https://threatpulse.iliadis.net/api/cti/v1/sources.php?limit=100"</code></pre>
+
+      <h3>
+        <span class="endpoint">
+          <span class="verb">GET</span>
+          <span class="path">cti/v1/attribution.php</span>
+          <span class="muted">— the attribution register</span>
+        </span>
+      </h3>
+      <p>
+        The authoritative statement of where the data comes from: each source's
+        provider, licence, licence and terms URLs, TLP default, tier, and whether
+        it is currently ingested. Any reuse must respect the upstream terms listed
+        here.
+      </p>
+      <table>
+        <thead>
+          <tr><th>Parameter</th><th>Type</th><th>Notes</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>limit</code></td><td>int</td><td>1–100, default 50.</td></tr>
+          <tr><td><code>offset</code></td><td>int</td><td>Default 0.</td></tr>
+          <tr><td><code>source_key</code></td><td>string</td><td>Exact source key.</td></tr>
+          <tr><td><code>tier</code></td><td>int</td><td>Restrict to one source tier.</td></tr>
+          <tr><td><code>ingested</code></td><td>bool</td><td><code>true</code> or <code>false</code> — currently contributing, versus declared only.</td></tr>
+        </tbody>
+      </table>
+      <pre><code>curl -s "https://threatpulse.iliadis.net/api/cti/v1/attribution.php?ingested=true&amp;limit=100"</code></pre>
+
+      <h3>
+        <span class="endpoint">
+          <span class="verb">GET</span>
+          <span class="path">cti/v1/publications.php</span>
+          <span class="muted">— publication history</span>
+        </span>
+      </h3>
+      <p>
+        The publication ledger: one entry per pipeline run that reached the API,
+        with its identifier, timestamps, status and record counts. Use it to tell a
+        stale dataset from a live one. Only completed publications are listed, so a
+        run interrupted between chunks cannot be mistaken for the published set;
+        each entry carries the <code>status</code> it was recorded with.
+      </p>
+      <table>
+        <thead>
+          <tr><th>Parameter</th><th>Type</th><th>Notes</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>limit</code></td><td>int</td><td>1–100, default 20.</td></tr>
+          <tr><td><code>offset</code></td><td>int</td><td>Default 0.</td></tr>
+          <tr><td><code>include_incomplete</code></td><td>bool</td><td>Default <code>false</code>. Pass <code>1</code> to list publications that are still receiving chunks. They are excluded by default because their counts cover only part of the snapshot.</td></tr>
+        </tbody>
+      </table>
+      <pre><code>curl -s "https://threatpulse.iliadis.net/api/cti/v1/publications.php?limit=5"</code></pre>
+
+      <h3>
+        <span class="endpoint">
+          <span class="verb">GET</span>
+          <span class="path">cti/v1/changes.php</span>
+          <span class="muted">— what changed since the previous publication</span>
+        </span>
+      </h3>
+      <p>
+        A publication is a complete snapshot, which makes "what is in the product"
+        easy to answer and "what is new" impossible without storing the previous
+        one yourself. This endpoint does the comparison server-side and reports
+        three kinds of movement against the immediately preceding publication:
+      </p>
+      <table>
+        <thead>
+          <tr><th>Kind</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>added</code></td><td>In this publication, absent from the previous one.</td></tr>
+          <tr><td><code>removed</code></td><td>In the previous publication, absent from this one.</td></tr>
+          <tr><td><code>changed</code></td><td>In both, with at least one field recorded as moved. The names are returned in <code>changed_fields</code>.</td></tr>
+        </tbody>
+      </table>
+      <p>
+        The <code>summary</code> object always counts all three kinds plus
+        <code>unchanged</code>, whichever list is being returned. Compare with
+        <code>publication_uuid</code> and <code>previous_publication_uuid</code> to
+        know exactly which two runs were diffed.
+      </p>
+      <table>
+        <thead>
+          <tr><th>Parameter</th><th>Type</th><th>Notes</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>kind</code></td><td>string</td><td><code>added</code> (default), <code>removed</code> or <code>changed</code>.</td></tr>
+          <tr><td><code>limit</code></td><td>int</td><td>1–100, default 50.</td></tr>
+          <tr><td><code>offset</code></td><td>int</td><td>Default 0.</td></tr>
+        </tbody>
+      </table>
+      <pre><code>curl -s "https://threatpulse.iliadis.net/api/cti/v1/changes.php?kind=changed&amp;limit=20"</code></pre>
+
+      <h3>
+        <span class="endpoint">
+          <span class="verb">GET</span>
+          <span class="path">cti/v1/source_health.php</span>
+          <span class="muted">— how each source behaved on the last run</span>
+        </span>
+      </h3>
+      <p>
+        The attribution register says what a source is and on what terms it may be
+        used. This says whether it actually worked on the run that produced the
+        current publication: <code>ok</code>, <code>degraded</code> (a retrieval
+        failure that fell back to a last-known-good snapshot) or
+        <code>failed</code>, with the observation count that justifies the verdict
+        and the reason where there is one.
+      </p>
+      <p>
+        A low record count is usually a source problem rather than a quiet day.
+        This is where to check. <code>available: false</code> means the publication
+        predates the report — it is not an error.
+      </p>
+      <table>
+        <thead>
+          <tr><th>Parameter</th><th>Type</th><th>Notes</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>status</code></td><td>string</td><td><code>ok</code>, <code>degraded</code> or <code>failed</code>.</td></tr>
+          <tr><td><code>source_key</code></td><td>string</td><td>Exact source key.</td></tr>
+          <tr><td><code>limit</code></td><td>int</td><td>1–100, default 50.</td></tr>
+          <tr><td><code>offset</code></td><td>int</td><td>Default 0.</td></tr>
+        </tbody>
+      </table>
+      <pre><code>curl -s "https://threatpulse.iliadis.net/api/cti/v1/source_health.php?status=failed"</code></pre>
+
+      <h2>Response headers</h2>
+      <p>
+        Read endpoints send <code>X-Content-Type-Options: nosniff</code>,
+        <code>X-Frame-Options: DENY</code>,
+        <code>Referrer-Policy: no-referrer</code> and
+        <code>Permissions-Policy: camera=(), microphone=(), geolocation=()</code>.
+        The JSON content type is <code>application/json; charset=utf-8</code>.
+      </p>
+
+      <h2>Not part of this contract</h2>
+      <p>
+        <code>publish.php</code> is the write endpoint used by the ThreatPulse
+        pipeline. It requires a bearer token, is not for public consumption, and is
+        documented in the deployment notes rather than here.
+      </p>
+
+      <footer>
+        <p>
+          ThreatPulse is an independent product, not a national CERT and not a
+          government body. Data is aggregated from third-party sources and can be
+          wrong, incomplete, stale or unavailable; see the
+          <a href="https://threatpulse.iliadis.net/methodology">methodology</a> and
+          the
+          <a href="https://threatpulse.iliadis.net/about">terms of use</a>.
+        </p>
+        <p>
+          <a href="https://threatpulse.iliadis.net/">← threatpulse.iliadis.net</a>
+          · <a href="cti/v1/">machine-readable index</a>
+        </p>
+      </footer>
+    </main>
+  </body>
+</html>
+
+
+
+

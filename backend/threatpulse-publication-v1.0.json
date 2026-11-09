@@ -1,0 +1,89 @@
+{
+  "schema_version": "1.0",
+  "publication_uuid": "550e8400-e29b-41d4-a716-446655440000",
+  "generated_at": "2026-10-30T01:30:00Z",
+
+  "summary": {
+    "title": "ThreatPulse Daily Threat Intelligence",
+    "description": "Aggregated and scored cyber threat intelligence, with every claim traceable to its source.",
+    "threat_count": 1,
+    "indicator_count": 2,
+    "vulnerability_count": 1
+  },
+
+  "sources": [
+    {
+      "source_key": "cisa_kev",
+      "name": "CISA Known Exploited Vulnerabilities Catalog",
+      "source_type": "advisory",
+      "url": "https://www.cisa.gov/known-exploited-vulnerabilities-catalog",
+      "provider": "CISA",
+      "reliability": "high"
+    }
+  ],
+
+  "threats": [
+    {
+      "threat_uuid": "6ba7b810-9dad-11d1-80b4-00c04fd430c8",
+      "external_id": "CVE-2026-12345",
+
+      "title": "Example actively exploited vulnerability",
+
+      "threat_type": "vulnerability",
+
+      "severity": "critical",
+
+      "priority_score": 91.50,
+
+      "confidence_score": 96.00,
+
+      "confidence_level": "high",
+
+      "exploitation_status": "confirmed",
+
+      "first_seen": "2026-10-29T08:00:00Z",
+
+      "last_seen": "2026-10-30T01:00:00Z",
+
+      "summary": "Example threat intelligence summary.",
+
+      "recommended_action": "Prioritize identification and remediation of affected assets.",
+
+      "metadata": {
+        "mitre_attack": [],
+        "affected_sectors": [],
+        "affected_products": []
+      },
+
+      "indicators": [
+        {
+          "indicator_uuid": "7ba7b810-9dad-11d1-80b4-00c04fd430c8",
+          "indicator_type": "domain",
+          "indicator_value": "example-malicious-domain.test",
+          "normalized_value": "example-malicious-domain.test",
+          "confidence_score": 90.00,
+          "first_seen": "2026-10-29T08:00:00Z",
+          "last_seen": "2026-10-30T01:00:00Z",
+          "active": true,
+          "relationship": "associated"
+        }
+      ],
+
+      "vulnerabilities": [
+        {
+          "cve_id": "CVE-2026-12345",
+          "description": "Example vulnerability.",
+          "cvss_score": 9.8,
+          "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+          "severity": "critical",
+          "kev_listed": true,
+          "exploited_in_wild": true,
+          "published_at": "2026-10-20T00:00:00Z",
+          "modified_at": "2026-10-29T00:00:00Z",
+          "vendor": "Example Vendor",
+          "product": "Example Product"
+        }
+      ]
+    }
+  ]
+}

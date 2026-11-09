@@ -1,0 +1,25 @@
+{
+  "product": {
+    "name": "ThreatPulse",
+    "version": "0.1.0"
+  },
+  "publication": {
+    "schema_version": "1.0"
+  },
+  "scoring": {
+    "model": "threatpulse_priority_v0.1"
+  },
+  "api": {
+    "url": "https://threatpulse.iliadis.net/api/cti/v1/publish.php",
+    "timeout_seconds": 30,
+    "publisher_token_source": "/etc/threatpulse/threatpulse.env",
+    "publisher_token_env_key": "THREATPULSE_PUBLISHER_TOKEN"
+  },
+  "collectors": {
+    "cisa_kev": {
+      "enabled": true,
+      "url": "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json",
+      "timeout_seconds": 30
+    }
+  }
+}

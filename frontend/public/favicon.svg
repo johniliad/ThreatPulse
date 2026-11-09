@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="ThreatPulse">
+  <rect width="64" height="64" rx="6" fill="#075e65" />
+  <path
+    d="M10 40h10l5-14 6 22 6-16 5 8h12"
+    fill="none"
+    stroke="#ffffff"
+    stroke-width="4.5"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+</svg>

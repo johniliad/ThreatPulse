@@ -1,0 +1,26 @@
+# ThreatPulse — repository root.
+#
+# Deployment credentials must never be committed. `threatpulse-secrets/` holds the
+# cPanel publisher config and the database configs, which contain a live database
+# password and the publisher token. Those files were tracked, so their values are
+# also in this repository's history: rotating them is required, not optional, and
+# untracking alone does not undo the exposure.
+threatpulse-secrets/
+
+# Local environment files.
+.env
+*.env
+threatpulse.env
+
+# Editors / OS
+.DS_Store
+Thumbs.db
+
+# API contract verifier — the SQLite fixture is rebuilt on demand.
+fixture.sqlite
+
+# Secrets - outside folder
+threatpulse-secrets/
+
+# MD Requirements
+requirements/

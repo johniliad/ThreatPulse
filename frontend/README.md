@@ -1,0 +1,72 @@
+# ThreatPulse frontend
+
+Public dashboard for **ThreatPulse — Transparent Cyber Threat Intelligence**.
+
+React + TypeScript + Vite. The production output is a set of static files that can be
+deployed to cPanel next to the existing PHP API. There is no Node runtime, no
+server-side rendering, no database and no authentication anywhere in this project.
+
+---
+
+## Requirements
+
+- Node.js 20 or newer (development and build only)
+- The ThreatPulse public CTI API, reachable at `/api/cti/v1/` on the same origin in
+  production
+
+## Commands
+
+```bash
+npm install          # install dependencies
+npm run dev          # development server on http://localhost:5173
+npm run build        # type-check (tsc -b) then produce dist/
+npm run preview      # serve the built dist/ locally
+npm run typecheck    # type-check only
+npm test             # run the unit tests (Vitest)
+npm run verify:api        # contract tests against a local PHP + SQLite harness
+npm run verify:api:live   # contract tests against the deployed API
+```
+
+## Configuration
+
+| Variable | Development | Production | Meaning |
+| --- | --- | --- | --- |
+| `VITE_API_BASE_URL` | `/api/cti/v1/` | `/api/cti/v1/` | Base URL of the public CTI API |
+
+In development the relative path is served by the Vite proxy declared in
+`vite.config.ts`, which forwards `/api` to `https://threatpulse.iliadis.net`.
+
+**The proxy is not optional.** `publications.php` returns no CORS headers, so a
+direct cross-origin request from the dev server would be blocked by the browser.
+An absolute API URL is supported for other setups.
+
+## Deployment (cPanel)
+
+1. `npm ci && npm run build`
+2. Upload the **contents** of `dist/` to the web root of `threatpulse.iliadis.net`
+   (merging with the existing `api/` directory — do not upload `dist/` itself).
+3. `dist/.htaccess` is included and handles the SPA rewrite, cache headers and
+   compression. It never rewrites `/api/`.
+4. No Node.js, npm, Docker or long-running process is required on the server.
+
+Rollback is a file copy: keep the previous build's contents.
+
+## Project layout
+
+```text
+src/
+  api/         typed API client: client, endpoints, types, validate, errors
+  hooks/       resource hooks, URL-synced filters, document metadata
+  components/  layout, common, threat, kpi, vuln
+  pages/       dashboard, threats, threat detail, vulnerabilities, sources, api, methodology, 404
+  lib/         constants, priority model, formatting, dates, URL safety
+  styles/      tokens.css, base.css, components.css
+  test/        Vitest setup
+```
+
+Design decisions and the discovery record are in
+[`DASHBOARD_IMPLEMENTATION_NOTES.md`](./DASHBOARD_IMPLEMENTATION_NOTES.md) — read it as
+a dated record of how the frontend was built, not as the current API contract. The
+contract itself is documented in [`../api/index.html`](../api/index.html) for humans,
+`../api/cti/v1/index.php` for machines, and exercised by `api-tests/`. The delivery
+report is in [`FINAL_REPORT.md`](./FINAL_REPORT.md).

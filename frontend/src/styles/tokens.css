@@ -1,0 +1,116 @@
+/*
+ * ThreatPulse design tokens.
+ *
+ * The core palette, spacing scale, radii, shadows, focus treatment and
+ * breakpoints are taken verbatim from the iliadis.net design system
+ * (https://www.iliadis.net/assets/css/site.css) so that ThreatPulse reads as
+ * part of the same professional ecosystem.
+ *
+ * ThreatPulse-specific additions are limited to: the type stacks, severity
+ * and priority-band colours, and data-density tokens. No new visual language
+ * is introduced.
+ */
+
+:root {
+  color-scheme: light;
+
+  /* ── iliadis.net palette ─────────────────────────────────────────── */
+  --color-ink: #142b3b;
+  --color-heading: #102a3a;
+  --color-muted: #526675;
+  --color-paper: #ffffff;
+  --color-canvas: #f3f7f8;
+  --color-border: #dce6e9;
+  --color-accent: #087e83;
+  --color-accent-strong: #075e65;
+  --color-accent-soft: #e7f4f2;
+  --color-focus: #8a4b00;
+  --color-focus-ring: #f2c078;
+  --color-danger: #a32d2d;
+
+  /* ── spacing scale ──────────────────────────────────────────────── */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --space-8: 4rem;
+  --space-9: 5rem;
+
+  /* ── layout ─────────────────────────────────────────────────────── */
+  --content-width: 70rem;
+  --reading-width: 48rem;
+  --page-gutter: 1.5rem;
+
+  --radius-control: 0.25rem;
+  --radius-card: 0.25rem;
+  --radius-image: 0.5rem;
+
+  --shadow-image: 0 12px 32px #19374614;
+  --shadow-raised: 0 1px 2px #102a3a14;
+
+  --focus-outline: 3px solid var(--color-focus);
+  --focus-offset: 3px;
+
+  --breakpoint-narrow: 30rem;
+  --breakpoint-tablet: 47.5rem;
+
+  /* ── type stacks ────────────────────────────────────────────────── */
+  --font-sans: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "Cascadia Mono",
+    "Segoe UI Mono", Menlo, Consolas, monospace;
+
+  /* ── severity scale ─────────────────────────────────────────────────
+   * Deliberately desaturated and always paired with a text label, so that
+   * severity is never communicated by colour alone.
+   */
+  --sev-critical-fg: #8a2020;
+  --sev-critical-bg: #fbeeee;
+  --sev-critical-border: #e6c3c3;
+
+  --sev-high-fg: #8a3d12;
+  --sev-high-bg: #fdf2ea;
+  --sev-high-border: #ecd3bf;
+
+  --sev-medium-fg: #6b5200;
+  --sev-medium-bg: #fbf7e6;
+  --sev-medium-border: #e8dcae;
+
+  --sev-low-fg: #46596a;
+  --sev-low-bg: #eef2f4;
+  --sev-low-border: #d5dfe4;
+
+  --sev-informational-fg: #46596a;
+  --sev-informational-bg: #eef2f4;
+  --sev-informational-border: #d5dfe4;
+
+  /* ── evidence / provenance ──────────────────────────────────────── */
+  --ev-confirmed-fg: #8a2020;
+  --ev-confirmed-bg: #fbeeee;
+  --ev-confirmed-border: #e6c3c3;
+
+  --ev-suspected-fg: #8a3d12;
+  --ev-suspected-bg: #fdf2ea;
+  --ev-suspected-border: #ecd3bf;
+
+  --ev-unknown-fg: #46596a;
+  --ev-unknown-bg: #eef2f4;
+  --ev-unknown-border: #d5dfe4;
+
+  --ev-none-fg: #3d5c46;
+  --ev-none-bg: #eef5f0;
+  --ev-none-border: #cfe0d5;
+
+  /* ── priority bands (display mapping of the documented band table) ─ */
+  --band-urgent-fg: #8a2020;
+  --band-high-fg: #8a3d12;
+  --band-elevated-fg: #6b5200;
+  --band-moderate-fg: #46596a;
+  --band-low-fg: #526675;
+
+  /* ── data density ───────────────────────────────────────────────── */
+  --row-padding-block: var(--space-4);
+  --row-padding-inline: var(--space-5);
+}

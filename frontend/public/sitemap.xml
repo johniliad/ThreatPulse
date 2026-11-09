@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ThreatPulse sitemap.
+
+  Every static page of the product is listed, and the sitemap is advertised in
+  robots.txt so crawlers discover it. `lastmod` is stamped at build time by
+  scripts/stamp-sitemap.mjs, which runs as part of `npm run build` — a sitemap
+  whose dates never move tells a crawler nothing about freshness.
+
+  Individual threat and vulnerability records are deliberately NOT enumerated.
+  There are thousands of them, they are superseded wholesale on every
+  publication, and they are rendered client-side from an API with no per-record
+  HTML — so a crawler would index a near-empty shell for each. The product's
+  own pages carry the content; the records are reachable from them.
+
+  The catch-all 404 route is not listed: it must not be indexed.
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://threatpulse.iliadis.net/</loc>
+    <lastmod>2026-11-02</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://threatpulse.iliadis.net/threats</loc>
+    <lastmod>2026-11-02</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://threatpulse.iliadis.net/vulnerabilities</loc>
+    <lastmod>2026-11-02</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://threatpulse.iliadis.net/about</loc>
+    <lastmod>2026-11-02</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://threatpulse.iliadis.net/sources</loc>
+    <lastmod>2026-11-02</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://threatpulse.iliadis.net/methodology</loc>
+    <lastmod>2026-11-02</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://threatpulse.iliadis.net/api</loc>
+    <lastmod>2026-11-02</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+</urlset>

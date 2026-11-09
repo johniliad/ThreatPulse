@@ -1,0 +1,22 @@
+[Unit]
+Description=Run the ThreatPulse CTI pipeline daily
+Documentation=file:///home/ubnt/ThreatPulse/README.md
+
+[Timer]
+# One run a day, early morning UTC. The offset keeps the run clear of the
+# sources' own publication times and of any other nightly job on the VM.
+OnCalendar=*-*-* 05:20:00 UTC
+
+# Up to 20 minutes of jitter, so a fleet of these would not hit the same feed at
+# the same second. Harmless for a single VM, correct for more than one.
+RandomizedDelaySec=20min
+
+# If the VM was off or the run was missed, run once shortly after boot rather
+# than waiting a full day. This is why the unit is a timer and not a cron entry.
+Persistent=true
+
+AccuracySec=1min
+Unit=threatpulse.service
+
+[Install]
+WantedBy=timers.target

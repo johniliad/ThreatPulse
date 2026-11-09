@@ -1,0 +1,36 @@
+# ThreatPulse backend — never commit secrets or runtime state.
+
+# Secrets (must live outside the repository, mode 0600)
+.env
+*.env
+threatpulse.env
+config/*.secret.json
+
+# Runtime state and artifacts.
+#
+# These patterns used to be the bare directory names, which ignored the source
+# package `state/` along with its runtime files. `state/store.py` is imported by
+# nearly every module and had never been committed, so the repository could not run;
+# `data/attribution.json` is the hand-maintained source and attribution register and
+# was ignored for the same reason. Only generated and downloaded files are excluded
+# now, and the register is explicitly re-included.
+state/*.json
+state/*.lock
+data/*.json
+!data/attribution.json
+logs/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+*.egg-info/
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

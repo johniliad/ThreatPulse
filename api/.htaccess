@@ -1,0 +1,94 @@
+# ThreatPulse — access control for the API tree.
+#
+# Two different requirements, and only one of them is a restriction:
+#
+#   PUBLIC      every read endpoint, the discovery index and this documentation
+#               page. The React frontend calls /api/cti/v1/* directly from the
+#               visitor's browser, so these have to accept anyone or the site
+#               stops working for the public.
+#
+#   RESTRICTED  publish.php, the write endpoint the pipeline POSTs to. Reachable
+#               only from the networks listed below.
+#
+#   DENIED      db.php, which is a library the endpoints include server-side and
+#               never something that should be served as a URL.
+#
+# The allowlist:
+#
+#   Require ip           private ranges (10/8, 192.168/16, 172.20/16)
+#   Require forward-dns  the home FortiGate's dynamic DNS name
+#
+# forward-dns is the right provider for a dynamic address, not `Require host`:
+# `host` matches on reverse DNS, a PTR lookup the DDNS provider does not
+# maintain, while forward-dns resolves the name and compares the result to the
+# client address. Apache documents it as the provider for clients "which use a
+# dynamic DNS service". It requires httpd 2.4.19 or later.
+#
+# mod_authz_core is a Base module of httpd 2.4, so nothing here is wrapped in
+# <IfModule>. That is deliberate: an <IfModule> guard would fail open and serve
+# the write endpoint to the world, and a security control should fail closed.
+
+Options -Indexes
+DirectoryIndex index.html
+
+# Public: the read API, the discovery index and this page. Stated explicitly
+# rather than left to the server default, so that the exception below is visible
+# next to what it is an exception to.
+Require all granted
+
+# Restricted: the pipeline's write endpoint.
+#
+# A <Files> section carries its own authorization, which applies in place of the
+# directory directive above for the files it matches, so this is a genuine
+# restriction and not an addition to a broader grant. <Files> matches the
+# basename at any depth, so /api/cti/v1/publish.php is covered.
+<Files "publish.php">
+    <RequireAny>
+        Require ip 10.0.0.0/8
+        Require ip 192.168.0.0/16
+        Require ip 172.20.0.0/16
+        Require forward-dns johniliadotefiber.fortiddns.com
+    </RequireAny>
+</Files>
+
+# Denied: db.php is included by the endpoints server-side. Requesting it as a
+# URL returns an empty body today, and nothing should be able to try.
+<Files "db.php">
+    Require all denied
+</Files>
+
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set Referrer-Policy "no-referrer"
+    Header set X-Frame-Options "DENY"
+</IfModule>
+
+# ---------------------------------------------------------------------------
+# VERIFYING IT WORKS
+#
+# The two endpoints answer with different statuses, which makes the rule
+# self-checking: a blocked request never reaches PHP, so it cannot return 401.
+#
+#   from a DISALLOWED address:
+#     POST /api/cti/v1/publish.php   -> 403  (Apache refused it)
+#
+#   from an ALLOWED address, without a token:
+#     POST /api/cti/v1/publish.php   -> 401  (PHP ran and rejected the caller)
+#
+#   from ANYWHERE:
+#     GET  /api/cti/v1/threats.php   -> 200  (still public)
+#
+# A 401 from a disallowed address means the restriction is NOT taking effect.
+# A 403 on threats.php means the public grant above is not taking effect either.
+#
+# IF forward-dns IS REJECTED
+# Older builds than httpd 2.4.19 have no forward-dns provider. The symptom is a
+# 500 on the whole API, with "Invalid command 'Require'" or "unknown provider" in
+# the error log, because a parse error takes the directory down with it. Pin the
+# address instead, and re-check it whenever the DDNS name changes:
+#
+#     Require ip 85.75.30.118
+#
+# Check the current answer with:  nslookup johniliadotefiber.fortiddns.com
+# ---------------------------------------------------------------------------
+

@@ -1,0 +1,57 @@
+# ThreatPulse — static frontend (React + Vite) deployed on Apache / cPanel.
+#
+# The PHP API lives in /api/cti/v1/ and is served by PHP directly: it must
+# never be rewritten to index.html, and its own response headers (set in PHP)
+# are deliberately left untouched here.
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # 1. Never rewrite the public API.
+  RewriteRule ^api/ - [L]
+
+  # 2. Existing files and directories always win (hashed assets, favicon,
+  #    robots.txt, sitemap.xml, og-image).
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # 3. Client-side routing fallback.
+  RewriteRule ^ index.html [L]
+</IfModule>
+
+<IfModule mod_headers.c>
+  # Vite fingerprints every build asset, so they can be cached indefinitely.
+  <FilesMatch "\.(?:js|css|woff2?|svg|png|jpe?g|webp|avif|ico)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+
+  # Except the favicon, which is served from a fixed path and is not
+  # fingerprinted: an immutable cache would pin a corrected icon in returning
+  # browsers for a year.
+  <FilesMatch "^favicon\.(?:ico|png|svg)$">
+    Header set Cache-Control "public, max-age=86400"
+  </FilesMatch>
+
+  # The HTML shell must be revalidated so new deploys are picked up.
+  <FilesMatch "\.(?:html|txt|xml)$">
+    Header set Cache-Control "public, max-age=0, must-revalidate"
+  </FilesMatch>
+
+  # Security headers for static responses only (never for .php, which sets
+  # its own headers).
+  <FilesMatch "\.(?:html|js|css|svg|txt|xml)$">
+    Header set X-Content-Type-Options "nosniff"
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+    Header set X-Frame-Options "DENY"
+    Header set Permissions-Policy "camera=(), microphone=(), geolocation=()"
+  </FilesMatch>
+
+  # Optional hardening — enable after confirming the site still works:
+  # Header set Content-Security-Policy "default-src 'self'; connect-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
+</IfModule>
+
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css text/plain application/javascript application/json image/svg+xml
+</IfModule>

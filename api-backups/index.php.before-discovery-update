@@ -1,0 +1,61 @@
+<?php
+
+declare(strict_types=1);
+
+header('Content-Type: application/json; charset=utf-8');
+
+if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+    header('Allow: GET');
+    http_response_code(405);
+
+    echo json_encode(
+        [
+            'status' => 'error',
+            'message' => 'Method Not Allowed.',
+            'allowed_methods' => ['GET'],
+        ],
+        JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
+    );
+
+    exit;
+}
+
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET');
+header('X-Content-Type-Options: nosniff');
+header('X-Frame-Options: DENY');
+header('Referrer-Policy: no-referrer');
+header('Cache-Control: public, max-age=300');
+
+echo json_encode(
+    [
+        'status' => 'ok',
+        'service' => 'ThreatPulse CTI API',
+        'api_version' => '1.0',
+        'description' =>
+            'Public read-only cyber threat intelligence API.',
+        'documentation' => [
+            'status' => '/api/cti/v1/status.php',
+            'publications' => '/api/cti/v1/publications.php',
+            'threats' => '/api/cti/v1/threats.php',
+            'threat' => '/api/cti/v1/threat.php?uuid={threat_uuid}',
+            'vulnerabilities' =>
+                '/api/cti/v1/vulnerabilities.php',
+            'sources' => '/api/cti/v1/sources.php',
+        ],
+        'capabilities' => [
+            'read_only' => true,
+            'authentication_required' => false,
+            'pagination' => true,
+            'severity_filtering' => true,
+            'exploitation_filtering' => true,
+            'cve_lookup' => true,
+        ],
+        'data_provenance' => [
+            'primary_source' =>
+                'CISA Known Exploited Vulnerabilities Catalog',
+        ],
+        'timestamp' => gmdate('c'),
+    ],
+    JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
+);

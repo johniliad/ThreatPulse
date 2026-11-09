@@ -1,0 +1,99 @@
+[Unit]
+Description=ThreatPulse CTI pipeline (collect, correlate, score, publish)
+
+# ---------------------------------------------------------------------------
+# INSTALL PATH — read this before editing a path below.
+#
+# The deployed tree is /home/ubnt/ThreatPulse, owned by ubnt, and the service
+# runs as that account. Earlier revisions of DEPLOYMENT.md and INSTALLATION.md
+# described /opt/threatpulse owned by a `threatpulse` system account; that is
+# NOT what this host runs. Every path, the service account and the sandbox
+# relaxations below were corrected to the real deployment on 2 Nov 2026.
+#
+# If the tree ever moves, change all of them together. Moving it OUT of /home
+# lets you restore ProtectHome=yes; moving anything into /home requires it to
+# stay relaxed, or systemd mounts /home empty and the unit fails to start with
+# a WorkingDirectory error that names nothing useful.
+# ---------------------------------------------------------------------------
+Documentation=file:///home/ubnt/ThreatPulse/README.md
+After=network-online.target
+Wants=network-online.target
+
+# A run that fails is retried at most three times an hour, then left alone until
+# the next scheduled slot. An unbounded restart would hammer a feed that is down.
+StartLimitIntervalSec=3600
+StartLimitBurst=3
+
+[Service]
+Type=oneshot
+User=ubnt
+Group=ubnt
+
+WorkingDirectory=/home/ubnt/ThreatPulse
+ExecStart=/usr/bin/python3 /home/ubnt/ThreatPulse/run_pipeline.py --publish
+
+# The pipeline downloads a 10 MB exploit catalogue and issues several hundred
+# small requests, so a run legitimately takes minutes. systemd's default start
+# timeout for a oneshot unit is 90 seconds, which would kill it mid-run and
+# report a failure for work that was still succeeding.
+TimeoutStartSec=2700
+
+# The publisher token is read by the application itself from
+# /etc/threatpulse/threatpulse.env (mode 0600). EnvironmentFile is deliberately
+# NOT used: it would copy the secret into systemd's environment, where it is
+# readable through /proc/<pid>/environ and visible to `systemctl show`.
+Environment=PYTHONUNBUFFERED=1
+Environment=THREATPULSE_ENV_FILE=/etc/threatpulse/threatpulse.env
+
+Restart=on-failure
+RestartSec=15min
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=threatpulse
+
+# -- hardening --------------------------------------------------------------
+NoNewPrivileges=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectSystem=strict
+# Relaxed deliberately: the code itself lives under /home. With ProtectHome=yes
+# systemd mounts /home empty and the unit cannot even reach its own
+# WorkingDirectory. See the INSTALL PATH note at the top.
+ProtectHome=no
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+RemoveIPC=yes
+SystemCallArchitectures=native
+CapabilityBoundingSet=
+AmbientCapabilities=
+UMask=0027
+
+# Everything the process may write, and nothing else. ProtectSystem=strict makes
+# the rest of the filesystem read-only for this service.
+ReadWritePaths=/home/ubnt/ThreatPulse/state
+ReadWritePaths=/home/ubnt/ThreatPulse/data
+ReadWritePaths=/home/ubnt/ThreatPulse/logs
+
+# Outbound HTTPS only. No inbound socket is ever opened.
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+
+# If a future change makes the pipeline fail to start with an EPERM or a
+# "failed to execute" message, relax these two first — they are the most
+# restrictive directives here and the least likely to be needed:
+#   MemoryDenyWriteExecute=yes
+#   SystemCallFilter=@system-service
+# Diagnose with: systemd-analyze verify /etc/systemd/system/threatpulse.service
+MemoryDenyWriteExecute=yes
+SystemCallFilter=@system-service
+
+[Install]
+WantedBy=multi-user.target

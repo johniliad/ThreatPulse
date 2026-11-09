@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ThreatPulse social preview image (1200×630).
+
+  NOTE: this is a placeholder in SVG form. Most social platforms (LinkedIn, X,
+  Facebook, Slack) do not render SVG Open Graph images, so this file should be
+  replaced with a 1200×630 PNG or JPEG of the same design before launch, and
+  the og:image / twitter:image references in index.html updated accordingly.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="ThreatPulse — Hellenic and European Cyber Threat Intelligence">
+  <rect width="1200" height="630" fill="#f3f7f8" />
+  <rect x="0" y="0" width="1200" height="10" fill="#075e65" />
+
+  <g transform="translate(90, 120)">
+    <rect width="72" height="72" rx="8" fill="#075e65" />
+    <path
+      d="M12 46h12l6-17 7 27 7-20 6 10h14"
+      fill="none"
+      stroke="#ffffff"
+      stroke-width="5"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+    <text
+      x="96"
+      y="50"
+      font-family="system-ui, -apple-system, 'Segoe UI', sans-serif"
+      font-size="42"
+      font-weight="700"
+      fill="#102a3a"
+    >ThreatPulse</text>
+  </g>
+
+  <text
+    x="90"
+    y="270"
+    font-family="system-ui, -apple-system, 'Segoe UI', sans-serif"
+    font-size="54"
+    font-weight="700"
+    fill="#102a3a"
+  >Hellenic &amp; European Cyber</text>
+  <text
+    x="90"
+    y="336"
+    font-family="system-ui, -apple-system, 'Segoe UI', sans-serif"
+    font-size="54"
+    font-weight="700"
+    fill="#102a3a"
+  >Threat Intelligence</text>
+
+  <text
+    x="90"
+    y="410"
+    font-family="system-ui, -apple-system, 'Segoe UI', sans-serif"
+    font-size="28"
+    fill="#526675"
+  >Turning global threat signals into intelligence that matters</text>
+  <text
+    x="90"
+    y="450"
+    font-family="system-ui, -apple-system, 'Segoe UI', sans-serif"
+    font-size="28"
+    fill="#526675"
+  >to Greece and Europe.</text>
+
+  <text
+    x="90"
+    y="540"
+    font-family="system-ui, -apple-system, 'Segoe UI', sans-serif"
+    font-size="24"
+    font-weight="600"
+    fill="#075e65"
+  >threatpulse.iliadis.net</text>
+
+  <rect x="0" y="612" width="1200" height="18" fill="#075e65" opacity="0.15" />
+</svg>
