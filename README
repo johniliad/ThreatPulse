@@ -1,0 +1,11 @@
+# ThreatPulse
+
+
+
+
+ThreatPulse
+What is happening?
+
+Prioritise the vulnerabilities and threats that deserve attention first, using normalised, scored threat intelligence.
+
+ThreatPulse is a threat-intelligence and vulnerability-prioritization application that collects and normalizes current cyber-threat information to help cybersecurity professionals identify which vulnerabilities and threats deserve attention first. It brings together sources such as the CISA Known Exploited Vulnerabilities (KEV) catalogue and applies prioritization and scoring so that security teams can focus on the items most likely to matter rather than working through unfiltered feeds. ThreatPulse is an independently developed analytical application intended to support, not replace, professional judgement: its prioritization reflects the sources and scoring applied at the time of viewing and is not an assessment, certification or endorsement by CISA or any other authority. Users should validate findings against their own vulnerability-management, threat-intelligence and risk processes before acting on them.
