@@ -56,14 +56,29 @@ become the baseline for the next delta and report thousands of phantom additions
 
 ### `HTTP 403` on publish
 
-**Cause.** `/api/` is restricted by source address (`api/.htaccess`). Either the
-VM's egress address is not on the allowlist, or the dynamic DNS record has not caught
-up with a changed WAN address.
+Two requirements refuse a publish, and they look identical to the caller.
+
+**Cause 1 — source address.** `/api/` is restricted by source address
+(`api/.htaccess`). Either the VM's egress address is not on the allowlist, or the
+dynamic DNS record has not caught up with a changed WAN address.
 
 **Fix.** Compare the VM's public egress with what the DDNS name resolves to. Note
 that the private ranges in the allowlist only match traffic arriving from inside
 those networks — a request to the public hostname from the same LAN still arrives
 with the public source address.
+
+**Cause 2 — the Cloudflare origin gate.** The same file refuses any request that
+does not carry the `X-Origin-Secret` header Cloudflare adds. A `403` with a
+correct allowlist means the header is missing, or the deployed `.htaccess` holds a
+different value than the Cloudflare Transform Rule.
+
+**Fix.** Tell the two apart with a read endpoint: a `403` on
+`GET /api/cti/v1/threats.php` affects every visitor, not just the publisher, so it
+is the gate and not the allowlist. Check that the Transform Rule action is
+**Set static**, then rebuild and upload `deployment/build/api/.htaccess`. Never
+upload the tracked `api/.htaccess` — it still contains the
+`__CF_ORIGIN_SECRET__` placeholder, which refuses Cloudflare as well. See
+[`../../requirements/ThreatPulse_Cloudflare_Origin_Restriction.md`](../../requirements/ThreatPulse_Cloudflare_Origin_Restriction.md).
 
 ### `HTTP 401` on publish
 

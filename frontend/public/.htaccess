@@ -4,6 +4,33 @@
 # never be rewritten to index.html, and its own response headers (set in PHP)
 # are deliberately left untouched here.
 
+# ---------------------------------------------------------------------------
+# CLOUDFLARE-ONLY ACCESS — always-on requirement.
+# See requirements/ThreatPulse_Cloudflare_Origin_Restriction.md.
+#
+# Cloudflare injects X-Origin-Secret on every request it forwards to this
+# origin, using a Transform Rule ("Set static", which overwrites any value the
+# visitor sent, so a client cannot supply its own). A request that arrives
+# without the exact value did not come through Cloudflare and is refused here,
+# before the SPA rewrite below can run.
+#
+# The value compared below is a build-time placeholder. It is replaced by
+# deployment/stamp-origin-secret.mjs, which writes the stamped copy into
+# dist/.htaccess; this tracked file always keeps the placeholder. A hex value
+# here means the stamp went to the wrong file and the build is wrong.
+#
+# Deliberately OUTSIDE <IfModule mod_rewrite.c>: mod_rewrite is present on this
+# host, and a guard would turn a missing module into an open site instead of a
+# 500. A security control fails closed — the same reasoning as api/.htaccess.
+#
+# The ACME challenge path is exempt so cPanel AutoSSL can validate the domain
+# without being routed through Cloudflare. It serves nothing worth hiding.
+# ---------------------------------------------------------------------------
+RewriteEngine On
+RewriteCond %{REQUEST_URI} !^/\.well-known/acme-challenge/
+RewriteCond %{HTTP:X-Origin-Secret} !^__CF_ORIGIN_SECRET__$
+RewriteRule ^ - [F,L]
+
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /

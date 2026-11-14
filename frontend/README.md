@@ -40,14 +40,28 @@ In development the relative path is served by the Vite proxy declared in
 direct cross-origin request from the dev server would be blocked by the browser.
 An absolute API URL is supported for other setups.
 
+The Cloudflare origin secret is not a frontend variable: it never reaches the
+bundle. It is read at build time only, to stamp `dist/.htaccess` and the API
+`.htaccess` — see
+[`../requirements/ThreatPulse_Cloudflare_Origin_Restriction.md`](../requirements/ThreatPulse_Cloudflare_Origin_Restriction.md).
+
 ## Deployment (cPanel)
 
-1. `npm ci && npm run build`
-2. Upload the **contents** of `dist/` to the web root of `threatpulse.iliadis.net`
+1. Put the Cloudflare origin secret in `threatpulse-secrets/origin-secret.env`
+   (or export `THREATPULSE_ORIGIN_SECRET`). Tracked files only ever carry the
+   `__CF_ORIGIN_SECRET__` placeholder.
+2. `npm ci && npm run build` — the build stamps the secret into
+   `dist/.htaccess` and `../deployment/build/api/.htaccess`, and fails if the
+   secret is missing or malformed.
+3. Upload the **contents** of `dist/` to the web root of `threatpulse.iliadis.net`
    (merging with the existing `api/` directory — do not upload `dist/` itself).
-3. `dist/.htaccess` is included and handles the SPA rewrite, cache headers and
-   compression. It never rewrites `/api/`.
-4. No Node.js, npm, Docker or long-running process is required on the server.
+4. Upload `../deployment/build/api/.htaccess` to `~/public_html/api/.htaccess`.
+   Never upload the tracked `api/.htaccess`: its placeholder would refuse every
+   request, Cloudflare included.
+5. `dist/.htaccess` handles the SPA rewrite, cache headers and compression, and
+   refuses any request that did not arrive through Cloudflare. It never rewrites
+   `/api/`.
+6. No Node.js, npm, Docker or long-running process is required on the server.
 
 Rollback is a file copy: keep the previous build's contents.
 

@@ -31,6 +31,35 @@
 Options -Indexes
 DirectoryIndex index.html
 
+# ---------------------------------------------------------------------------
+# CLOUDFLARE-ONLY ACCESS — always-on requirement.
+# See requirements/ThreatPulse_Cloudflare_Origin_Restriction.md.
+#
+# Every request under /api/ must carry the X-Origin-Secret that Cloudflare
+# injects with a Transform Rule ("Set static", which overwrites a
+# visitor-supplied value). This block is required in *this* file, not only in
+# the web-root .htaccess: mod_rewrite rules in a parent directory are not
+# inherited by a child directory that has its own .htaccess
+# (RewriteOptions Inherit is off by default), so the root rule does not cover
+# /api/ at all.
+#
+# The value compared below is a build-time placeholder. It is replaced by
+# deployment/stamp-origin-secret.mjs, which writes the deployable copy to
+# deployment/build/api/.htaccess; this tracked file always keeps the placeholder.
+#
+# This runs in the fixup phase, i.e. after the <Files "publish.php"> allowlist
+# below has already granted or refused the request. The two are compatible:
+#   disallowed address            -> 403 (authz)
+#   allowed address, no token     -> 401 (PHP ran)
+#   any address, no CF header     -> 403 (this rule)
+# so the self-check in the block at the end of this file still holds.
+#
+# No <IfModule> guard: it would fail open (see the note at the top).
+# ---------------------------------------------------------------------------
+RewriteEngine On
+RewriteCond %{HTTP:X-Origin-Secret} !^__CF_ORIGIN_SECRET__$
+RewriteRule ^ - [F,L]
+
 # Public: the read API, the discovery index and this page. Stated explicitly
 # rather than left to the server default, so that the exception below is visible
 # next to what it is an exception to.

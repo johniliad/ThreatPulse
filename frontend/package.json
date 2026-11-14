@@ -6,7 +6,8 @@
   "description": "ThreatPulse — Transparent Cyber Threat Intelligence dashboard (static React + Vite frontend for the public CTI API).",
   "scripts": {
     "dev": "vite",
-    "build": "node scripts/stamp-sitemap.mjs && tsc -b && vite build",
+    "build": "node scripts/stamp-sitemap.mjs && tsc -b && vite build && node ../deployment/stamp-origin-secret.mjs",
+    "stamp:origin": "node ../deployment/stamp-origin-secret.mjs",
     "preview": "vite preview",
     "typecheck": "tsc -b",
     "test": "vitest run",

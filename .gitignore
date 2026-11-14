@@ -22,5 +22,10 @@ fixture.sqlite
 # Secrets - outside folder
 threatpulse-secrets/
 
+# Generated deployment artifacts. These carry the live Cloudflare origin secret
+# stamped by deployment/stamp-origin-secret.mjs; only the placeholder-bearing
+# templates (api/.htaccess, frontend/public/.htaccess) belong in the repository.
+deployment/build/
+
 # MD Requirements
 requirements/

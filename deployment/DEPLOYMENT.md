@@ -5,11 +5,90 @@ optional unless marked.
 
 | Target | Path | What runs there |
 | --- | --- | --- |
+| Cloudflare edge | Transform Rule | adds `X-Origin-Secret` to every request it forwards to the origin |
 | cPanel public API | `~/public_html/api/` | `index.html` (docs) + `.htaccess` (access control) |
 | cPanel public API | `~/public_html/api/cti/v1/` | PHP read endpoints + `publish.php` |
 | cPanel secrets | `/home/iliadis/threatpulse-secrets/` | DB credentials, publisher token |
 | VM backend | `/home/ubnt/ThreatPulse/` | Python collectors, scoring, publication |
 | Static frontend | web root | `frontend/dist/` |
+
+---
+
+## Before you start — Cloudflare origin restriction
+
+The site answers only when the request arrives through Cloudflare. Both deployed
+`.htaccess` files refuse anything that does not carry `X-Origin-Secret`, and
+Cloudflare adds that header to every request it forwards to the origin.
+
+Requirement:
+[`../requirements/ThreatPulse_Cloudflare_Origin_Restriction.md`](../requirements/ThreatPulse_Cloudflare_Origin_Restriction.md).
+
+| Piece | Where it lives | In git |
+| --- | --- | --- |
+| the value | `threatpulse-secrets/origin-secret.env`, or `$THREATPULSE_ORIGIN_SECRET` | no |
+| the value | Cloudflare → Rules → Transform Rules → Modify Request Header → **Set static** `X-Origin-Secret` | no |
+| the check | `api/.htaccess` and `frontend/public/.htaccess`, carrying `__CF_ORIGIN_SECRET__` | yes |
+| the check | `deployment/build/api/.htaccess` and `frontend/dist/.htaccess`, stamped | no |
+
+"Set static" (not "set if not present") is the required action: it **overwrites**
+whatever the visitor sent, so a client cannot supply its own value to get through.
+
+Create the local secret file once. The value is 64 lowercase hex characters — it
+is compared with a PCRE inside `.htaccess`, so a base64 or passphrase value would
+widen or break the comparison:
+
+```bash
+openssl rand -hex 32          # copy the same output into the Cloudflare rule
+printf 'THREATPULSE_ORIGIN_SECRET=%s\n' '<value>' > threatpulse-secrets/origin-secret.env
+chmod 600 threatpulse-secrets/origin-secret.env
+```
+
+Every build stamps it into the files that are uploaded:
+
+```bash
+cd frontend
+npm run build                 # dist/.htaccess + ../deployment/build/api/.htaccess
+npm run stamp:origin          # re-stamp only, without a rebuild
+```
+
+`npm run build` **fails** when the secret is missing or malformed, by design: a
+build that cannot enforce the requirement must not look deployable. For a local
+preview without a secret, `node ../deployment/stamp-origin-secret.mjs
+--allow-placeholder` leaves the placeholder in place — that build answers `403`
+to everything once deployed, which is the intent.
+
+Upload **`deployment/build/api/.htaccess`**, never the tracked `api/.htaccess`.
+The tracked file still contains the placeholder, so every request — Cloudflare's
+included — would be refused.
+
+### Verify
+
+Through Cloudflare, from anywhere:
+
+```bash
+curl -sS -o /dev/null -w "%{http_code}\n" https://threatpulse.iliadis.net/
+curl -sS -o /dev/null -w "%{http_code}\n" "https://threatpulse.iliadis.net/api/cti/v1/threats.php?limit=1"
+```
+
+Both `200`. Straight to the origin, bypassing Cloudflare (use the account's
+shared IP; `-k` because the origin certificate is a Cloudflare Origin CA
+certificate or the host's AutoSSL certificate):
+
+```bash
+curl -ksS -o /dev/null -w "%{http_code}\n" --resolve threatpulse.iliadis.net:443:<origin-ip> https://threatpulse.iliadis.net/
+curl -ksS -o /dev/null -w "%{http_code}\n" --resolve threatpulse.iliadis.net:443:<origin-ip> "https://threatpulse.iliadis.net/api/cti/v1/threats.php?limit=1"
+```
+
+Both `403`, and `200` when the same request carries
+`-H "X-Origin-Secret: <value>"` — that last one proves the rule is doing the
+blocking, not the network.
+
+`/.well-known/acme-challenge/<file>` stays reachable without the header so cPanel
+AutoSSL keeps renewing; put a test file there and fetch it directly from the
+origin.
+
+Do not skip the direct-to-origin test. Through Cloudflare it returns `200`
+whether the rule works or not.
 
 ---
 
@@ -20,7 +99,7 @@ Two files sit at the API root, not inside `cti/v1/`. Both are required.
 | File | Purpose |
 | --- | --- |
 | `api/index.html` | the API documentation page served at `/api/` |
-| `api/.htaccess` | keeps the read API public and restricts the write endpoint |
+| `api/.htaccess` | keeps the read API public, restricts the write endpoint, and refuses anything that did not come through Cloudflare — upload the **stamped** copy from `deployment/build/api/.htaccess` |
 
 `.htaccess` also sets `Options -Indexes`, so `/api/` no longer exposes a bare
 directory listing and serves `index.html` instead.
@@ -33,6 +112,10 @@ directory listing and serves `index.html` instead.
 | every read endpoint (`threats`, `vulnerabilities`, `sources`, `attribution`, `publications`, `changes`, `source_health`, `status`) | public |
 | `POST /api/cti/v1/publish.php` | allowlist **and** bearer token |
 | `/api/cti/v1/db.php` | denied outright |
+
+Every row in that table is additionally gated on the Cloudflare header: a request
+without it is refused with `403` before the row's own rule is even considered
+(see *Before you start*).
 
 The read endpoints must stay public: the React frontend calls them from the
 visitor's browser, so any restriction there takes the whole site down for
