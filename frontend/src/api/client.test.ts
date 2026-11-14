@@ -96,6 +96,25 @@ describe('apiGet', () => {
     expect(error.kind).toBe('invalid-response');
   });
 
+  it('reports an HTML error page as the HTTP status it carries', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        new Response('<!doctype html><h1>Forbidden</h1>', {
+          status: 403,
+          headers: { 'Content-Type': 'text/html' },
+        })
+      )
+    );
+
+    const error = (await apiGet('').catch((caught) => caught)) as ApiError;
+
+    expect(error.kind).toBe('http');
+    expect(error.status).toBe(403);
+    expect(error.detail).toBeNull();
+    expect(error.userMessage).toContain('refused');
+  });
+
   it('reports a network failure without leaking the underlying error', async () => {
     vi.stubGlobal(
       'fetch',

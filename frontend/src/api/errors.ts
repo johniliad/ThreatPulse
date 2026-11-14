@@ -88,6 +88,10 @@ export class ApiError extends Error {
           return 'The API rejected the request method.';
         }
 
+        if (this.status === 403) {
+          return 'The API refused the request. This deployment restricts access to that endpoint, or the request did not arrive through the expected front end.';
+        }
+
         if (this.status === 429) {
           return 'The ThreatPulse API is rate limiting requests. Please wait a moment and try again.';
         }

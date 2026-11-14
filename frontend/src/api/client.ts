@@ -149,11 +149,21 @@ async function fetchJson(url: string, timeoutMs: number): Promise<unknown> {
     try {
       json = JSON.parse(text);
     } catch (error) {
-      throw new ApiError(
-        'invalid-response',
-        'The API response body was not valid JSON.',
-        { status: response.status, cause: error }
-      );
+      /*
+       * A non-JSON body is only a contract violation when the request itself
+       * succeeded. An error status (403/404/5xx) from the web server or a proxy
+       * usually carries an HTML error page, and reporting that as an unverified
+       * payload would hide the real cause — so the status is checked first.
+       */
+      if (response.ok) {
+        throw new ApiError(
+          'invalid-response',
+          'The API response body was not valid JSON.',
+          { status: response.status, cause: error }
+        );
+      }
+
+      json = null;
     }
   }
 

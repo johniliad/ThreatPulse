@@ -129,11 +129,19 @@ export async function fetchApiStatus(
   return parseApiStatus(json);
 }
 
-/** GET / — API discovery document (documentation + capabilities). */
+/**
+ * GET /index.php — API discovery document (documentation + capabilities).
+ *
+ * The file name is explicit, never the directory. `/api/cti/v1/` only resolves
+ * to `index.php` when the server's `DirectoryIndex` allows it — server
+ * configuration a client cannot verify. The configuration that shipped with
+ * 1.0.0 answered the directory with HTTP 403, so the script is requested by
+ * name, which is the form that does not depend on that setting.
+ */
 export async function fetchApiIndex(
   options?: ApiGetOptions
 ): Promise<ApiIndex> {
-  const json = await apiGet('', options);
+  const json = await apiGet('index.php', options);
 
   return parseApiIndex(json);
 }
