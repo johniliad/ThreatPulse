@@ -1,12 +1,93 @@
 # ThreatPulse
 
+![ThreatPulse dashboard](./ThreatPulse%20Cybersecurity%20Intelligence%20Dashboard.png)
 
+Prioritise the vulnerabilities and threats that deserve attention first, using
+normalised, scored threat intelligence.
 
+ThreatPulse is a threat-intelligence and vulnerability-prioritization application
+that collects and normalizes current cyber-threat information to help cybersecurity
+professionals identify which vulnerabilities and threats deserve attention first. It
+brings together sources such as the CISA Known Exploited Vulnerabilities (KEV)
+catalogue and applies prioritization and scoring so that security teams can focus on
+the items most likely to matter rather than working through unfiltered feeds.
+ThreatPulse is an independently developed analytical application intended to
+support, not replace, professional judgement: its prioritization reflects the
+sources and scoring applied at the time of viewing and is not an assessment,
+certification or endorsement by CISA or any other authority. Users should validate
+findings against their own vulnerability-management, threat-intelligence and risk
+processes before acting on them.
 
-ThreatPulse
-What is happening?
+Live at [threatpulse.iliadis.net](https://threatpulse.iliadis.net/). API discovery
+document: [api/index.html](api/index.html).
 
-Prioritise the vulnerabilities and threats that deserve attention first, using normalised, scored threat intelligence.
+## What is in this repository
 
-ThreatPulse is a threat-intelligence and vulnerability-prioritization application that collects and normalizes current cyber-threat information to help cybersecurity professionals identify which vulnerabilities and threats deserve attention first. It brings together sources such as the CISA Known Exploited Vulnerabilities (KEV) catalogue and applies prioritization and scoring so that security teams can focus on the items most likely to matter rather than working through unfiltered feeds. ThreatPulse is an independently developed analytical application intended to support, not replace, professional judgement: its prioritization reflects the sources and scoring applied at the time of viewing and is not an assessment, certification or endorsement by CISA or any other authority. Users should validate findings against their own vulnerability-management, threat-intelligence and risk processes before acting on them.
+| Path | What it is |
+| --- | --- |
+| `frontend/` | React 19 + TypeScript + Vite dashboard. Static build, deployed next to the API, no server runtime. |
+| `api/` | PHP read API (schema 1.0) plus the restricted write endpoint, and the human-readable API documentation at `api/index.html`. |
+| `backend/` | Python pipeline: collect, normalise, correlate, enrich, score, quality gate, publish. Standard library only. |
+| `deployment/` | Deployment checklist, origin restriction, the build-time stamping script and systemd/MySQL assets. |
+| `api-tests/` | Contract suite that exercises the API against a local PHP + SQLite harness. |
 
+## Quick start
+
+```bash
+# dashboard
+cd frontend
+npm ci
+npm run dev            # http://localhost:5173, /api proxied to the live site
+npm test               # unit tests
+npm run build          # type-check, bundle, stamp the origin secret
+
+# pipeline
+cd backend
+python3 -m unittest discover -s tests -t .   # 629 tests
+python3 run_pipeline.py --dry-run            # collect and score, transmit nothing
+
+# API contract
+cd frontend
+npm run verify:api     # local PHP + SQLite harness
+```
+
+## Deployment
+
+See [deployment/DEPLOYMENT.md](deployment/DEPLOYMENT.md). The site is reachable only
+through Cloudflare: both `.htaccess` files require a header the edge injects, and the
+value is stamped at build time from a file that is not in git. The reasoning, the
+rotation procedure and the verification matrix are in
+[deployment/ORIGIN_RESTRICTION.md](deployment/ORIGIN_RESTRICTION.md).
+
+## Data and attribution
+
+Every ingested source is recorded with its provider, licence and attribution text in
+`backend/data/attribution.json`. That register is published by the API at
+`/api/cti/v1/attribution.php` and shown on the site Sources page.
+
+The register records summaries, not legal advice. Each source remains subject to its
+own current terms; verify them before relying on a source commercially.
+
+## Security
+
+Please report vulnerabilities privately, not in a public issue. See
+[SECURITY.md](SECURITY.md).
+
+## Licence
+
+Copyright 2026 Dr. John Iliadis. Licensed under the
+[Apache License 2.0](LICENSE); see [NOTICE](NOTICE) for the required copyright
+statement and trademark notes.
+
+The licence covers this source code only. It does not grant rights to the third-party
+threat intelligence that ThreatPulse republishes; that data stays subject to each
+provider terms. Third-party code notices are in
+[THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md), and runtime notices are served at
+`/THIRD-PARTY-NOTICES.txt`.
+
+Release history: [CHANGELOG.md](CHANGELOG.md).
+
+## Contributing
+
+Contributions are accepted under the same Apache License 2.0. No separate contributor
+agreement is required.

@@ -43,7 +43,7 @@ An absolute API URL is supported for other setups.
 The Cloudflare origin secret is not a frontend variable: it never reaches the
 bundle. It is read at build time only, to stamp `dist/.htaccess` and the API
 `.htaccess` — see
-[`../requirements/ThreatPulse_Cloudflare_Origin_Restriction.md`](../requirements/ThreatPulse_Cloudflare_Origin_Restriction.md).
+[`../deployment/ORIGIN_RESTRICTION.md`](../deployment/ORIGIN_RESTRICTION.md).
 
 ## Deployment (cPanel)
 

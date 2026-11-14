@@ -1,0 +1,42 @@
+ThreatPulse
+Copyright 2026 Dr. John Iliadis
+
+This product includes software developed by third parties. The full inventory,
+including copyright notices and the licence texts that must travel with the
+software, is in THIRD-PARTY-NOTICES.md.
+
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use
+this project except in compliance with the License. A copy of the License is in
+the LICENSE file at the root of this repository, and at
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software distributed
+under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+CONDITIONS OF ANY KIND, either express or implied. See the License for the
+specific language governing permissions and limitations under the License.
+
+Data and attribution
+--------------------
+
+The Apache License 2.0 covers the source code of ThreatPulse only. It does not
+grant rights to the third-party threat intelligence that ThreatPulse collects,
+normalises and republishes. Every source remains subject to its own provider terms.
+The authoritative register is backend/data/attribution.json, which the API also
+publishes at /api/cti/v1/attribution.php and the site displays on its Sources page.
+
+Trademarks
+----------
+
+MITRE ATT&CK and ATT&CK are registered trademarks of The MITRE Corporation, as is
+CWE. CVE is a trademark of The MITRE Corporation. All other names referenced in
+this repository or on the site (CISA, NIST, FIRST, ENISA, CERT-EU, CIRCL, MISP,
+Microsoft, Red Hat, Canonical, Cisco, Fortinet, WordPress, SigmaHQ, Exploit-DB,
+Nuclei, Metasploit, Spamhaus, SANS, and others) are the property of their
+respective owners. They are used here nominatively, to identify the source of
+data. No endorsement, sponsorship or affiliation is implied, and ThreatPulse is
+not certified, endorsed or approved by any of them.
+
+ThreatPulse is an independently developed analytical application. Its
+prioritisation reflects the sources and scoring applied at the time of viewing
+and is not an assessment, certification or endorsement by CISA or any other
+authority.

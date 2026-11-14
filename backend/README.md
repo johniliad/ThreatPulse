@@ -30,7 +30,7 @@ collect → normalise → correlate → enrich → score → quality gate → pu
 
 ```bash
 cd backend
-python3 -m unittest discover -s tests -t .   # expect 624 tests, OK
+python3 -m unittest discover -s tests -t .   # expect 629 tests, OK
 python3 run_pipeline.py --dry-run            # fetch, correlate, score, write a snapshot
 python3 run_pipeline.py --publish            # the same, then transmit it
 ```
@@ -66,7 +66,7 @@ backend/
   state/           persistent state: caches, first-seen dates, change history
   lib/             config, HTTP, identity, atomic writes, attribution, TLP, logging
   scripts/         analysis and verification tools
-  tests/           26 files, 624 tests
+  tests/           26 files, 629 tests
   config/          settings.json — sources, timeouts, publication limits
   data/            snapshots and the attribution register (register is tracked)
 ```

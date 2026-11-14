@@ -78,7 +78,7 @@ is the gate and not the allowlist. Check that the Transform Rule action is
 **Set static**, then rebuild and upload `deployment/build/api/.htaccess`. Never
 upload the tracked `api/.htaccess` — it still contains the
 `__CF_ORIGIN_SECRET__` placeholder, which refuses Cloudflare as well. See
-[`../../requirements/ThreatPulse_Cloudflare_Origin_Restriction.md`](../../requirements/ThreatPulse_Cloudflare_Origin_Restriction.md).
+[`../../deployment/ORIGIN_RESTRICTION.md`](../../deployment/ORIGIN_RESTRICTION.md).
 
 ### `HTTP 401` on publish
 

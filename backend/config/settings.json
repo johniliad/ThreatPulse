@@ -14,7 +14,7 @@
     "max_attempts": 3,
     "backoff_seconds": 2,
     "backoff_multiplier": 2,
-    "user_agent": "ThreatPulse-Backend/0.1 (+https://threatpulse.iliadis.net/)"
+    "user_agent": "ThreatPulse-Backend/1.0 (+https://threatpulse.iliadis.net/)"
   },
   "publisher": {
     "endpoint": "https://threatpulse.iliadis.net/api/cti/v1/publish.php",

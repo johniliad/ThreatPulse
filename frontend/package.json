@@ -1,7 +1,7 @@
 {
   "name": "threatpulse-frontend",
   "private": true,
-  "version": "0.1.0",
+  "version": "1.0.0",
   "type": "module",
   "description": "ThreatPulse — Transparent Cyber Threat Intelligence dashboard (static React + Vite frontend for the public CTI API).",
   "scripts": {

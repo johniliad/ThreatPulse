@@ -55,7 +55,7 @@ echo json_encode(
     [
         'status' => 'ok',
         'service' => 'iliadis-cti-api',
-        'version' => '0.1.0'
+        'version' => '1.0.0'
     ],
     JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
 );

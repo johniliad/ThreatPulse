@@ -6,7 +6,7 @@
 
 # ---------------------------------------------------------------------------
 # CLOUDFLARE-ONLY ACCESS — always-on requirement.
-# See requirements/ThreatPulse_Cloudflare_Origin_Restriction.md.
+# See deployment/ORIGIN_RESTRICTION.md.
 #
 # Cloudflare injects X-Origin-Secret on every request it forwards to this
 # origin, using a Transform Rule ("Set static", which overwrites any value the

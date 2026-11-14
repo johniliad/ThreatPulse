@@ -21,7 +21,7 @@ The site answers only when the request arrives through Cloudflare. Both deployed
 Cloudflare adds that header to every request it forwards to the origin.
 
 Requirement:
-[`../requirements/ThreatPulse_Cloudflare_Origin_Restriction.md`](../requirements/ThreatPulse_Cloudflare_Origin_Restriction.md).
+[`ORIGIN_RESTRICTION.md`](ORIGIN_RESTRICTION.md).
 
 | Piece | Where it lives | In git |
 | --- | --- | --- |
@@ -267,7 +267,7 @@ still required.
 > or delete first and copy second.
 >
 > The suite count is the gate: `python3 -m unittest discover -s tests -t .` must report
-> **exactly `Ran 624 tests` and `OK`**. A higher count means orphaned test modules are
+> **exactly `Ran 629 tests` and `OK`**. A higher count means orphaned test modules are
 > still present; a lower one means files did not arrive.
 
 Upload the whole `backend/` tree. The files that matter:
@@ -596,7 +596,7 @@ Apply it once, then publish: the backend sends its register with every publicati
 ```bash
 cd /home/ubnt/ThreatPulse
 
-# 1. The suite must pass. Expect 624 tests, OK.
+# 1. The suite must pass. Expect 629 tests, OK.
 python3 -m unittest discover -s tests -t . 2>&1 | tail -5
 
 # 2. A real run that never transmits.

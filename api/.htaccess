@@ -33,7 +33,7 @@ DirectoryIndex index.html
 
 # ---------------------------------------------------------------------------
 # CLOUDFLARE-ONLY ACCESS — always-on requirement.
-# See requirements/ThreatPulse_Cloudflare_Origin_Restriction.md.
+# See deployment/ORIGIN_RESTRICTION.md.
 #
 # Every request under /api/ must carry the X-Origin-Secret that Cloudflare
 # injects with a Transform Rule ("Set static", which overwrites a
