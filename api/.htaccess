@@ -60,6 +60,14 @@ RewriteEngine On
 RewriteCond %{HTTP:X-Origin-Secret} !^__CF_ORIGIN_SECRET__$
 RewriteRule ^ - [F,L]
 
+# Apache's shipped configuration already denies .ht* files; stating the rule
+# here makes the guarantee local to this file rather than inherited from the
+# host. The (?!well-known) lookahead keeps the ACME path reachable, which
+# certificate renewal depends on. The deployed copy holds the origin secret.
+<FilesMatch "^\.(?!well-known)">
+    Require all denied
+</FilesMatch>
+
 # Public: the read API, the discovery index and this page. Stated explicitly
 # rather than left to the server default, so that the exception below is visible
 # next to what it is an exception to.

@@ -33,9 +33,11 @@ Requirement:
 "Set static" (not "set if not present") is the required action: it **overwrites**
 whatever the visitor sent, so a client cannot supply its own value to get through.
 
-Create the local secret file once. The value is 64 lowercase hex characters — it
-is compared with a PCRE inside `.htaccess`, so a base64 or passphrase value would
-widen or break the comparison:
+Create the local secret file once. The value is 32 to 128 characters from
+`A-Z a-z 0-9 - _`; 64 hex characters is the recommended form. It is compared with
+a PCRE inside `.htaccess`, so standard base64 (`+`, `/`, `=`) and passphrases
+(`.`, `$`) would widen or break the comparison. `npm run stamp:origin -- --check`
+reports where the value came from and whether it is usable, without writing:
 
 ```bash
 openssl rand -hex 32          # copy the same output into the Cloudflare rule
