@@ -1,0 +1,15 @@
+# ThreatPulse — security contact information (RFC 9116)
+# https://www.rfc-editor.org/rfc/rfc9116
+#
+# Machine-readable companion to SECURITY.md. Served from the static build, so
+# the committed copy lives in frontend/public/.well-known/ and Vite copies it to
+# the web root. Keep the contacts, the policy URL and the expiry in step with
+# SECURITY.md; the expiry is deliberately under a year away.
+
+Contact: mailto:john@iliadis.net
+Contact: https://github.com/johniliad/ThreatPulse/security/advisories/new
+Expires: 2027-11-01T00:00:00.000Z
+Preferred-Languages: en, el
+Canonical: https://threatpulse.iliadis.net/.well-known/security.txt
+Policy: https://github.com/johniliad/ThreatPulse/blob/main/SECURITY.md
+Acknowledgments: https://github.com/johniliad/ThreatPulse/blob/main/SECURITY.md#credit

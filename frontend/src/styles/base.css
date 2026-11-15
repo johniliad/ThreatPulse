@@ -133,6 +133,20 @@ table {
   letter-spacing: 0.01em;
 }
 
+/*
+ * The <noscript> fallback in index.html. It used to carry a style attribute,
+ * which the Content-Security-Policy (style-src 'self', no 'unsafe-inline')
+ * blocks; a class in this stylesheet works with JavaScript disabled, because
+ * the stylesheet itself is an ordinary subresource.
+ */
+.noscript-notice {
+  max-width: 46rem;
+  margin: 3rem auto;
+  padding: 0 1.5rem;
+  font-family: system-ui, sans-serif;
+  color: #142b3b;
+}
+
 /* ── accessibility helpers ────────────────────────────────────────── */
 
 .visually-hidden {

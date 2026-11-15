@@ -29,7 +29,11 @@
 # the write endpoint to the world, and a security control should fail closed.
 
 Options -Indexes
-DirectoryIndex index.html
+# `index.php` first: /api/cti/v1/ has no index.html, so it must resolve to the
+# discovery script. With only `index.html` here the directory request answered
+# 403, which is what clients that follow the documented base URL hit.
+# The api/ root still serves its human-readable index.html (no index.php there).
+DirectoryIndex index.php index.html
 
 # ---------------------------------------------------------------------------
 # CLOUDFLARE-ONLY ACCESS — always-on requirement.
@@ -60,6 +64,16 @@ RewriteEngine On
 RewriteCond %{HTTP:X-Origin-Secret} !^__CF_ORIGIN_SECRET__$
 RewriteRule ^ - [F,L]
 
+# Serve the discovery document at the canonical URL without a redirect.
+#
+# mod_dir answers a request for the directory without a trailing slash with a
+# 301 that carries a generated HTML body; mod_rewrite's per-directory rules run
+# before mod_dir's fixup, so resolving the URL here answers it directly. The
+# request never reaches PHP with a trailing-slash form it did not ask for, and
+# there is no redirect body at all. The gated rule above still runs first, so an
+# unauthorised request is refused before this.
+RewriteRule ^cti/v1$ cti/v1/index.php [L]
+
 # Apache's shipped configuration already denies .ht* files; stating the rule
 # here makes the guarantee local to this file rather than inherited from the
 # host. The (?!well-known) lookahead keeps the ACME path reachable, which
@@ -88,16 +102,44 @@ Require all granted
     </RequireAny>
 </Files>
 
-# Denied: db.php is included by the endpoints server-side. Requesting it as a
-# URL returns an empty body today, and nothing should be able to try.
-<Files "db.php">
+# Denied: db.php and http.php are libraries the endpoints include server-side.
+# Requesting either as a URL returns an empty body today, and nothing should be
+# able to try.
+<FilesMatch "^(?:db|http)\.php$">
     Require all denied
-</Files>
+</FilesMatch>
 
+# ---------------------------------------------------------------------------
+# SECURITY HEADERS — the single source for the whole /api/ tree.
+#
+# The PHP endpoints do not set these themselves (see api/cti/v1/http.php):
+# `Header always` also covers responses Apache generates without running PHP —
+# a denied publish.php is a 403 from mod_authz_core, not from PHP — and it
+# keeps one copy of each value instead of two that can drift apart.
+#
+# The CSP allows a same-origin stylesheet for this tree's documentation page
+# (docs.css) and nothing else; the JSON endpoints load no subresources at all.
+# It has no 'unsafe-inline' and no wildcard source.
+# ---------------------------------------------------------------------------
 <IfModule mod_headers.c>
-    Header set X-Content-Type-Options "nosniff"
-    Header set Referrer-Policy "no-referrer"
-    Header set X-Frame-Options "DENY"
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "DENY"
+    Header always set Content-Security-Policy "default-src 'none'; style-src 'self'; img-src 'self' data:; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
+    Header always set Referrer-Policy "no-referrer"
+    Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+    Header always set X-Permitted-Cross-Domain-Policies "none"
+    Header always unset X-Powered-By
+
+    # HSTS only on a TLS response: sent over plain HTTP it is ignored, and a
+    # browser that has seen `max-age=0` keeps HSTS disabled for that host.
+    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains" "expr=%{HTTPS} == 'on'"
+
+    # A session cookie must not be readable from script, must not travel over
+    # plain HTTP and must not ride along on cross-site requests. `edit` appends
+    # a flag only when it is missing, so a correct cookie is left untouched.
+    Header always edit Set-Cookie "^(?i)(?!.*;\s*httponly)(.*)$" "$1; HttpOnly"
+    Header always edit Set-Cookie "^(?i)(?!.*;\s*secure)(.*)$" "$1; Secure" "expr=%{HTTPS} == 'on'"
+    Header always edit Set-Cookie "^(?i)(?!.*;\s*samesite)(.*)$" "$1; SameSite=Lax"
 </IfModule>
 
 # ---------------------------------------------------------------------------

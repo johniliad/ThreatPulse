@@ -382,9 +382,11 @@ require the deployment step below.
    to confirm all 22 assertions pass against production.
 
 `dist/.htaccess` handles the SPA rewrite (never rewriting `/api/`), immutable caching
-for hashed assets, revalidation for HTML, security headers for static responses only,
-and gzip. A Content-Security-Policy is included as a commented-out line, to be enabled
-after confirming the site still works.
+for hashed assets, revalidation for HTML, the security headers for the whole tree,
+and gzip. The Content-Security-Policy is enabled: it has no `'unsafe-inline'`, so
+inline `style` attributes are not allowed — style the page from the stylesheet.
+`deployment/stamp-sri.mjs` adds Subresource Integrity hashes to the built entry
+script and stylesheet during `npm run build`.
 
 Do **not** deploy `api-backups/` or `api-tests/`.
 

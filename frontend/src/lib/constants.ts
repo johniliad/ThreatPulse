@@ -86,7 +86,7 @@ export const ECOSYSTEM_LABEL = 'iliadis.net';
  * so the product states who built it in the author's own words rather than in
  * marketing copy. If those fields change there, they should change here.
  */
-export const AUTHOR_NAME = 'Dr. John Iliadis';
+export const AUTHOR_NAME = 'Dr. John ILIADIS';
 export const AUTHOR_NAME_GREEK = 'Γιάννης Ηλιάδης';
 export const AUTHOR_TITLE = 'Technology & Cybersecurity Executive';
 export const AUTHOR_URL = ECOSYSTEM_URL;
@@ -99,7 +99,7 @@ export const AUTHOR_CREDENTIALS =
 
 /** The author's own one-sentence description, verbatim from iliadis.net. */
 export const AUTHOR_DESCRIPTION =
-  'Dr. John Iliadis brings 20+ years of technology and cybersecurity leadership across enterprise infrastructure, cyber operations, transformation and resilience in mission-critical environments.';
+  'Dr. John ILIADIS brings 20+ years of technology and cybersecurity leadership across enterprise infrastructure, cyber operations, transformation and resilience in mission-critical environments.';
 
 export const AUTHOR_EDUCATION = [
   {

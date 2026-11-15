@@ -25,7 +25,7 @@ import {
 
 export function AboutPage() {
   useDocumentMeta({
-    title: 'About — built by Dr. John Iliadis',
+    title: 'About — built by Dr. John ILIADIS',
     description:
       'Who builds ThreatPulse, why it exists, how it is engineered, and the terms it is offered under.',
     path: '/about',
@@ -35,7 +35,7 @@ export function AboutPage() {
     <>
       <PageHead
         eyebrow="About"
-        title="Built by Dr. John Iliadis"
+        title="Built by Dr. John ILIADIS"
         lead="ThreatPulse is a public cyber threat intelligence product. This page states who builds it, why it exists, and how it is engineered — so that anyone reading the numbers can check where they come from."
       />
 
@@ -43,7 +43,7 @@ export function AboutPage() {
         <div className="container tp-prose">
           <h2>The author</h2>
           <p>
-            <strong>Dr. John Iliadis</strong> (Γιάννης Ηλιάδης) is a technology and
+            <strong>Dr. John ILIADIS</strong> (Γιάννης Ηλιάδης) is a technology and
             cybersecurity executive based in Athens, Greece, and IT Infrastructure
             Director at TEIRESIAS S.A. He brings more than twenty years of
             technology and cybersecurity leadership across enterprise

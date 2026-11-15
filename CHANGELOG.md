@@ -4,6 +4,68 @@ All notable changes to ThreatPulse are recorded here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-11-15
+
+### Fixed
+
+- The `/api` page no longer reports "Capabilities unavailable". The discovery
+  document is now requested as `/api/cti/v1/index.php`; the directory form
+  (`/api/cti/v1/`) answered `403` under `Options -Indexes` with
+  `DirectoryIndex index.html`, and the HTML error page was being reported as an
+  invalid contract payload.
+- `api/.htaccess` and `deployment/build/api/.htaccess` now set
+  `DirectoryIndex index.php index.html`, so the documented base URL
+  `/api/cti/v1/` serves the discovery document.
+- API client: a non-JSON error body (for example a proxy's HTML `403`) is
+  reported as an HTTP error carrying its status, instead of as an
+  `invalid-response`, and `403` has its own message.
+- `api-tests/verify-api.mjs` probes `index.php` by name, so the contract suite no
+  longer reports a deployed enhancement as missing.
+
+### Security
+
+Hardening of the HTTP surface after a passive scan of the deployed site.
+
+- Security headers are set with `Header always set` in both `.htaccess` files,
+  so they cover the error documents Apache generates itself — the `403` from the
+  `publish.php` allowlist, a `404` — and not only successful responses:
+  `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`,
+  `Referrer-Policy: no-referrer`, `Permissions-Policy`,
+  `X-Permitted-Cross-Domain-Policies: none`, a `Content-Security-Policy` that
+  defines `base-uri`, `form-action` and `frame-ancestors` and contains no
+  `'unsafe-inline'`, and `Strict-Transport-Security:
+  max-age=31536000; includeSubDomains` on HTTPS responses. The PHP endpoints no
+  longer set them a second time; the request-dependent part lives in the new
+  `api/cti/v1/http.php`.
+- The inline `style` attributes in `index.html` and `api/index.html` are gone
+  (a stylesheet class, and `api/docs.css`), so `style-src` needs no
+  `'unsafe-inline'`. The `<style>` block on the API documentation page moved to
+  that file.
+- `Access-Control-Allow-Origin: *` is removed from the read endpoints. An
+  `Origin` is echoed only for the product's own hostnames, `Vary: Origin` is
+  set, and `Access-Control-Allow-Credentials` is never sent.
+  `publications.php` now answers CORS on the same terms as the other endpoints
+  instead of sending none.
+- `HttpOnly`, `Secure` (over TLS) and `SameSite=Lax` are appended to any
+  `Set-Cookie` the origin emits when the script that set it omitted them, and
+  PHP's session cookie parameters are hardened before a session can start.
+- `frontend/dist/index.html` and `api/index.html` pin their script and
+  stylesheet references with SHA-384 Subresource Integrity hashes, stamped by
+  `deployment/stamp-sri.mjs` as part of `npm run build`; `npm run sri:check`
+  fails on a stale hash.
+- `/api/cti/v1` without the trailing slash is answered directly with the
+  discovery document instead of a `301` carrying a generated body. `/api` keeps
+  its canonical redirect to `/api/`: a directory URL is meant to redirect, and
+  Apache's stub body (~290 bytes) is well below the size the scanner rule treats
+  as a leak.
+- `http.php` is denied as a URL, alongside `db.php`.
+- Residual: the Cloudflare Transform Rule still sends
+  `Strict-Transport-Security: max-age=0` at the edge, which disables HSTS for
+  the host whatever the origin sends. It has to be set to the same max-age, or
+  removed, before that finding can clear; see `deployment/DEPLOYMENT.md`. A
+  redirect with a large body was not reproducible from the origin either, so any
+  remaining report of one points at a redirect added at the edge.
+
 ## [1.0.0] - 2026-11-14
 
 First public release.

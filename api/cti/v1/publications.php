@@ -2,7 +2,19 @@
 
 declare(strict_types=1);
 
+/*
+ * Security headers for the whole /api/ tree are set in api/.htaccess, so they
+ * also cover the responses Apache generates without running PHP. This file adds
+ * what depends on the request: the CORS allowlist and the cookie attributes.
+ * See http.php.
+ */
+
+require_once __DIR__ . '/http.php';
+
+threatpulse_harden_session_cookies();
+
 header('Content-Type: application/json; charset=utf-8');
+threatpulse_send_cors_headers();
 
 require_once __DIR__ . '/db.php';
 

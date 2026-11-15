@@ -101,19 +101,22 @@ Two files sit at the API root, not inside `cti/v1/`. Both are required.
 | File | Purpose |
 | --- | --- |
 | `api/index.html` | the API documentation page served at `/api/` |
-| `api/.htaccess` | keeps the read API public, restricts the write endpoint, and refuses anything that did not come through Cloudflare — upload the **stamped** copy from `deployment/build/api/.htaccess` |
+| `api/docs.css` | the documentation page's stylesheet (external, so the CSP needs no `'unsafe-inline'`) |
+| `api/.htaccess` | keeps the read API public, restricts the write endpoint, sets the security headers for the whole tree, and refuses anything that did not come through Cloudflare — upload the **stamped** copy from `deployment/build/api/.htaccess` |
 
 `.htaccess` also sets `Options -Indexes`, so `/api/` no longer exposes a bare
-directory listing and serves `index.html` instead.
+directory listing and serves `index.html` instead. `DirectoryIndex` lists
+`index.php` first, so `/api/cti/v1/` resolves to the discovery script rather than
+falling through to a `403`.
 
 ### What is public and what is not
 
 | Request | Access |
 | --- | --- |
-| `GET /api/` and `GET /api/cti/v1/` | public |
+| `GET /api/` and `GET /api/cti/v1/` (alias of `cti/v1/index.php`) | public |
 | every read endpoint (`threats`, `vulnerabilities`, `sources`, `attribution`, `publications`, `changes`, `source_health`, `status`) | public |
 | `POST /api/cti/v1/publish.php` | allowlist **and** bearer token |
-| `/api/cti/v1/db.php` | denied outright |
+| `/api/cti/v1/db.php`, `/api/cti/v1/http.php` | denied outright |
 
 Every row in that table is additionally gated on the Cloudflare header: a request
 without it is refused with `403` before the row's own rule is even considered
@@ -161,10 +164,46 @@ curl -sS -o /dev/null -w "%{http_code}\n" -X POST \
 curl -sS -o /dev/null -w "%{http_code}\n" \
   "https://threatpulse.iliadis.net/api/cti/v1/threats.php?limit=1"
 
-# Anywhere -> 403, db.php is not reachable
+# Anywhere -> 403, libraries are not reachable
 curl -sS -o /dev/null -w "%{http_code}\n" \
   https://threatpulse.iliadis.net/api/cti/v1/db.php
+curl -sS -o /dev/null -w "%{http_code}\n" \
+  https://threatpulse.iliadis.net/api/cti/v1/http.php
 ```
+
+### Response headers
+
+Both `.htaccess` files set the security headers with `Header always set`, so an
+error document Apache generates itself (a `403` from the allowlist, a `404`) is
+covered as well as a normal response. The PHP endpoints deliberately do not set
+them again: `api/cti/v1/http.php` only handles the CORS allowlist and the cookie
+attributes, and two copies of the same header would drift apart.
+
+| Header | Value |
+| --- | --- |
+| `Content-Security-Policy` | the site: `default-src 'self'` with no `'unsafe-inline'`; `/api/`: `default-src 'none'; style-src 'self'`. Both carry `base-uri`, `form-action` and `frame-ancestors` `'none'` — the directives that do not fall back to `default-src`. |
+| `Strict-Transport-Security` | `max-age=31536000; includeSubDomains`, sent on TLS responses only |
+| `X-Content-Type-Options` | `nosniff` |
+| `X-Frame-Options` | `DENY` (with `frame-ancestors 'none'`) |
+| `Referrer-Policy` | `no-referrer` |
+| `Permissions-Policy` | camera, microphone, geolocation, payment and usb disabled |
+| `X-Permitted-Cross-Domain-Policies` | `none` |
+| `Set-Cookie` | `HttpOnly`, `Secure` (TLS) and `SameSite=Lax` appended when a script omits them |
+
+**The Cloudflare Transform Rule must agree with them.** A rule that sets
+`Strict-Transport-Security: max-age=0` disables HSTS for the host even while the
+origin sends a year, and a rule that replaces the CSP overrides the policy above.
+Check what the edge actually returns, not only the origin:
+
+```bash
+curl -sSI https://threatpulse.iliadis.net/ \
+  | grep -iE 'strict-transport|content-security|x-content-type|x-frame|referrer'
+```
+
+`frontend/dist/index.html` carries a SHA-384 Subresource Integrity hash on the
+entry script and stylesheet, and `api/index.html` on `docs.css`, stamped by
+`deployment/stamp-sri.mjs` during `npm run build`. `npm run sri:check` fails if a
+hash is missing or stale after an asset changes.
 
 A `401` from a disallowed address means the restriction is not taking effect. A
 temporary publish outage with `403` means the VM's egress address no longer
@@ -193,6 +232,8 @@ Require ip 85.75.30.118
 | `changes.php` | **NEW** | the delta against the previous publication |
 | `source_health.php` | **NEW** | per-source run health |
 | `threat.php`, `sources.php`, `publications.php`, `status.php` | unchanged | upload only if missing |
+| `http.php` | **NEW** | shared CORS allowlist and cookie hardening; included by every endpoint, and denied as a URL |
+| `attribution.php`, `changes.php`, `index.php`, `publications.php`, `source_health.php`, `sources.php`, `status.php`, `threat.php`, `threats.php`, `vulnerabilities.php` | **CHANGED** | include `http.php`; no longer set security headers or `Access-Control-Allow-Origin: *` themselves (both live in `api/.htaccess` / `http.php`) |
 
 Upload `threats.php`, `vulnerabilities.php` and `index.php` too if you have not
 already, otherwise the live contract check reports skips. Backups of the
@@ -664,6 +705,25 @@ cd frontend && npm ci && npm run build
 The frontend changed in this phase — the favicon, the priority band reference on the
 dashboard, and the scoring and confidence wording on Methodology and About — so
 rebuild and re-upload `frontend/dist/` even if it was deployed before.
+
+`dist/` also carries `/.well-known/security.txt`, the RFC 9116 contact file
+generated from `frontend/public/.well-known/security.txt`. It is part of the
+static build: upload it with the rest, or the policy advertised in `SECURITY.md`
+answers `404`. The origin gate still applies to it — it is reachable through
+Cloudflare, which is where a researcher will be.
+
+### Cached images: only `/assets/` may be immutable
+
+Only `/assets/` is content-fingerprinted by Vite, so `.htaccess` marks only that
+tree `immutable`; every other static file gets one day. A `public/` file keeps
+its name across deploys, so calling it immutable pins whatever a browser fetched
+first for a year — an updated dashboard image then stays invisible in returning
+browsers while the origin serves the new bytes. The dashboard hero is imported
+from `src/assets/`, so Vite gives it a hashed filename and the question does not
+arise. `og-image.jpg` keeps a stable name, so `index.html` requests it as
+`og-image.jpg?v=N`; bump `N` when the artwork changes, because social scrapers
+cache by URL. After the first deploy of this change, delete the old
+`/threatpulse-hero.jpg` from the web root — the hero now lives under `/assets/`.
 
 ---
 

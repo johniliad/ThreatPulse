@@ -11,7 +11,7 @@
     />
     <meta name="robots" content="index, follow" />
     <meta name="theme-color" content="#075e65" />
-    <meta name="author" content="Dr. John Iliadis" />
+    <meta name="author" content="Dr. John ILIADIS" />
     <link rel="author" href="https://www.iliadis.net/" />
     <link rel="canonical" href="https://threatpulse.iliadis.net/" />
     <link rel="icon" href="/favicon.ico" sizes="48x48" />
@@ -31,16 +31,21 @@
     <!--
       A raster image, not the SVG. LinkedIn, Facebook and X do not render SVG for
       og:image, and a shared link is where most new readers arrive.
+
+      `?v=` is part of the cache key for every social scraper: they keep the
+      image they first fetched for that URL, so bump this whenever og-image.jpg
+      changes. The dashboard hero does not need this — it is imported from
+      src/assets, so Vite gives it a content-hashed filename.
     -->
     <meta
       property="og:image"
-      content="https://threatpulse.iliadis.net/og-image.jpg"
+      content="https://threatpulse.iliadis.net/og-image.jpg?v=2"
     />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta
       property="og:image:alt"
-      content="ThreatPulse — Transparent cyber threat intelligence"
+      content="ThreatPulse — actionable threat intelligence for a more resilient enterprise"
     />
 
     <meta name="twitter:card" content="summary_large_image" />
@@ -54,7 +59,7 @@
     />
     <meta
       name="twitter:image"
-      content="https://threatpulse.iliadis.net/og-image.jpg"
+      content="https://threatpulse.iliadis.net/og-image.jpg?v=2"
     />
 
     <!--
@@ -84,7 +89,7 @@
   <body>
     <div id="root"></div>
     <noscript>
-      <div style="max-width: 46rem; margin: 3rem auto; padding: 0 1.5rem; font-family: system-ui, sans-serif; color: #142b3b;">
+      <div class="noscript-notice">
         <h1>ThreatPulse — Transparent Cyber Threat Intelligence</h1>
         <p>
           ThreatPulse turns global cyber threat signals into transparent,

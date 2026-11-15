@@ -14,6 +14,7 @@ import { AuthorStrip } from '../components/layout/AuthorStrip';
 import { formatCount, formatDateTimeUtc, formatScore } from '../lib/format';
 import { PRIORITY_BANDS } from '../lib/priority';
 import { threatsPath } from '../lib/urls';
+import heroBanner from '../assets/threatpulse-hero.jpg';
 import { KpiCountCard } from '../components/kpi/KpiGrid';
 import {
   EmptyState,
@@ -109,7 +110,7 @@ export function DashboardPage() {
           <figure className="tp-hero__banner">
             <img
               className="tp-hero__banner-image"
-              src="/threatpulse-hero.jpg"
+              src={heroBanner}
               width={1672}
               height={941}
               alt="ThreatPulse threat intelligence banner: actively exploited vulnerabilities, threat monitoring, risk prioritisation and actionable insights."

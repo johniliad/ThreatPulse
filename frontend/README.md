@@ -36,9 +36,10 @@ npm run verify:api:live   # contract tests against the deployed API
 In development the relative path is served by the Vite proxy declared in
 `vite.config.ts`, which forwards `/api` to `https://threatpulse.iliadis.net`.
 
-**The proxy is not optional.** `publications.php` returns no CORS headers, so a
-direct cross-origin request from the dev server would be blocked by the browser.
-An absolute API URL is supported for other setups.
+**The proxy is not optional.** The deployed API echoes `Access-Control-Allow-Origin`
+only for the product's own hostnames, so a direct cross-origin request from the
+dev server would be blocked by the browser. An absolute API URL is supported for
+other setups.
 
 The Cloudflare origin secret is not a frontend variable: it never reaches the
 bundle. It is read at build time only, to stamp `dist/.htaccess` and the API

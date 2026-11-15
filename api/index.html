@@ -11,122 +11,13 @@
     <meta name="robots" content="noindex, nofollow" />
     <meta name="theme-color" content="#075e65" />
     <link rel="icon" href="/favicon.ico" sizes="48x48" />
-    <style>
-      :root {
-        color-scheme: light dark;
-        --bg: #ffffff;
-        --fg: #14211f;
-        --muted: #5b6b68;
-        --line: #d8e2e0;
-        --accent: #075e65;
-        --accent-soft: #e6f2f2;
-        --code-bg: #f4f7f7;
-        --warn-bg: #fff6e5;
-        --warn-fg: #6b4700;
-      }
-      @media (prefers-color-scheme: dark) {
-        :root {
-          --bg: #0d1618;
-          --fg: #e6eeed;
-          --muted: #9db0ad;
-          --line: #23383b;
-          --accent: #5fd0d0;
-          --accent-soft: #10292b;
-          --code-bg: #122023;
-          --warn-bg: #2c2210;
-          --warn-fg: #f0c778;
-        }
-      }
-      * { box-sizing: border-box; }
-      body {
-        margin: 0;
-        background: var(--bg);
-        color: var(--fg);
-        font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-          Helvetica, Arial, sans-serif;
-      }
-      main { max-width: 62rem; margin: 0 auto; padding: 2.5rem 1.25rem 5rem; }
-      h1 { font-size: clamp(1.6rem, 4vw, 2.2rem); margin: 0 0 0.35rem; }
-      h2 {
-        font-size: 1.25rem;
-        margin: 2.75rem 0 0.75rem;
-        padding-bottom: 0.4rem;
-        border-bottom: 1px solid var(--line);
-      }
-      h3 { font-size: 1.02rem; margin: 1.9rem 0 0.4rem; }
-      p, li { color: var(--fg); }
-      .lede { color: var(--muted); font-size: 1.02rem; margin: 0 0 1.5rem; }
-      .muted { color: var(--muted); }
-      a { color: var(--accent); }
-      code {
-        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-        font-size: 0.88em;
-        background: var(--code-bg);
-        padding: 0.1em 0.35em;
-        border-radius: 4px;
-        overflow-wrap: anywhere;
-      }
-      pre {
-        background: var(--code-bg);
-        border: 1px solid var(--line);
-        border-radius: 8px;
-        padding: 0.85rem 1rem;
-        overflow-x: auto;
-        font-size: 0.86rem;
-        line-height: 1.5;
-      }
-      pre code { background: none; padding: 0; }
-      table { border-collapse: collapse; width: 100%; margin: 0.5rem 0 1rem; }
-      th, td {
-        text-align: left;
-        padding: 0.45rem 0.6rem;
-        border-bottom: 1px solid var(--line);
-        vertical-align: top;
-        font-size: 0.93rem;
-      }
-      th { color: var(--muted); font-weight: 600; }
-      .endpoint {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-        align-items: baseline;
-        margin-bottom: 0.5rem;
-      }
-      .verb {
-        background: var(--accent-soft);
-        color: var(--accent);
-        border-radius: 5px;
-        padding: 0.1rem 0.5rem;
-        font-size: 0.78rem;
-        font-weight: 700;
-        letter-spacing: 0.06em;
-      }
-      .path { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.95rem; }
-      .box {
-        border: 1px solid var(--line);
-        border-left: 3px solid var(--accent);
-        border-radius: 8px;
-        padding: 0.9rem 1.1rem;
-        margin: 1.25rem 0;
-      }
-      .warn {
-        background: var(--warn-bg);
-        color: var(--warn-fg);
-        border: 1px solid var(--line);
-        border-left: 3px solid var(--warn-fg);
-        border-radius: 8px;
-        padding: 0.9rem 1.1rem;
-        margin: 1.25rem 0;
-        font-size: 0.93rem;
-      }
-      footer {
-        margin-top: 3.5rem;
-        padding-top: 1.25rem;
-        border-top: 1px solid var(--line);
-        color: var(--muted);
-        font-size: 0.88rem;
-      }
-    </style>
+    <!--
+      External stylesheet, not an inline <style> block: /api/ is served with
+      Content-Security-Policy style-src 'self' and no 'unsafe-inline', which
+      blocks inline styles. The integrity hash is stamped by
+      deployment/stamp-sri.mjs.
+    -->
+    <link rel="stylesheet" href="docs.css" integrity="sha384-1C7t1piR7WYBs528vaJhXL/1mPUlvYE8eXtlJd3I8RtvmgOxbi2OR7AKQb8hxsQX" crossorigin="anonymous" />
   </head>
   <body>
     <main>
@@ -140,9 +31,10 @@
       <div class="box">
         <strong>Base URL</strong>
         <pre><code>https://threatpulse.iliadis.net/api/cti/v1/</code></pre>
-        <p class="muted" style="margin: 0">
+        <p class="muted tight">
           Every endpoint below is relative to it. Discovery lives at
-          <a href="cti/v1/">cti/v1/</a>.
+          <a href="cti/v1/index.php">cti/v1/index.php</a> (the directory
+          <code>cti/v1/</code> serves the same document).
         </p>
       </div>
 
@@ -162,8 +54,11 @@
         <li><strong>Read-only.</strong> Only <code>GET</code> (and
           <code>OPTIONS</code> for pre-flight) is accepted. Anything else returns
           <code>405</code> with an <code>Allow</code> header.</li>
-        <li><strong>CORS.</strong> <code>Access-Control-Allow-Origin: *</code> on
-          the read endpoints.</li>
+        <li><strong>CORS.</strong> No wildcard. An <code>Origin</code> is echoed
+          only for <code>https://threatpulse.iliadis.net</code> (or its
+          <code>www</code> alias), and <code>Access-Control-Allow-Credentials</code>
+          is never sent. Server-side clients are unaffected; a page on any other
+          origin cannot read these responses from a browser.</li>
         <li><strong>Caching.</strong> <code>Cache-Control: public, max-age=60</code>.</li>
         <li><strong>Attribution.</strong> The
           <a href="cti/v1/attribution.php">attribution register</a> lists every
@@ -228,16 +123,18 @@
       <h3>
         <span class="endpoint">
           <span class="verb">GET</span>
-          <span class="path">cti/v1/</span>
+          <span class="path">cti/v1/index.php</span>
           <span class="muted">— discovery</span>
         </span>
       </h3>
       <p>
         Machine-readable index: the endpoint list, API capabilities and a pointer
         to the attribution register. Intended as the entry point for clients that
-        should not hard-code what is available.
+        should not hard-code what is available. Request the script by name:
+        <code>cti/v1/</code> resolves to it only while the server's
+        <code>DirectoryIndex</code> permits.
       </p>
-      <pre><code>curl -s https://threatpulse.iliadis.net/api/cti/v1/</code></pre>
+      <pre><code>curl -s https://threatpulse.iliadis.net/api/cti/v1/index.php</code></pre>
       <pre><code>{
   "status": "ok",
   "service": "ThreatPulse CTI API",
@@ -256,7 +153,7 @@
       </h3>
       <p>Cheap health check. No database access, no parameters.</p>
       <pre><code>curl -s https://threatpulse.iliadis.net/api/cti/v1/status.php</code></pre>
-      <pre><code>{ "status": "ok", "service": "iliadis-cti-api", "version": "0.1.0" }</code></pre>
+      <pre><code>{ "status": "ok", "service": "iliadis-cti-api", "version": "1.1.0" }</code></pre>
 
       <h3>
         <span class="endpoint">
@@ -499,11 +396,18 @@ curl -s "https://threatpulse.iliadis.net/api/cti/v1/threats.php?cve=CVE-2026-109
 
       <h2>Response headers</h2>
       <p>
-        Read endpoints send <code>X-Content-Type-Options: nosniff</code>,
+        Every response under <code>/api/</code> carries
+        <code>X-Content-Type-Options: nosniff</code>,
         <code>X-Frame-Options: DENY</code>,
-        <code>Referrer-Policy: no-referrer</code> and
-        <code>Permissions-Policy: camera=(), microphone=(), geolocation=()</code>.
-        The JSON content type is <code>application/json; charset=utf-8</code>.
+        <code>Referrer-Policy: no-referrer</code>,
+        <code>Permissions-Policy: camera=(), microphone=(), geolocation=(),
+        payment=(), usb=()</code>,
+        <code>X-Permitted-Cross-Domain-Policies: none</code> and
+        <code>Content-Security-Policy: default-src 'none'; style-src 'self';
+        base-uri 'none'; form-action 'none'; frame-ancestors 'none'</code>.
+        <code>Strict-Transport-Security: max-age=31536000; includeSubDomains</code>
+        is added on HTTPS. The JSON content type is
+        <code>application/json; charset=utf-8</code>.
       </p>
 
       <h2>Not part of this contract</h2>

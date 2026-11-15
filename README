@@ -1,6 +1,234 @@
 # ThreatPulse
 
-![ThreatPulse dashboard](./ThreatPulse%20Cybersecurity%20Intelligence%20Dashboard.png)
+## About
+
+ThreatPulse demonstrates my ability to turn raw threat intelligence into
+prioritised security decisions. I designed it around the problem security leaders
+actually face: not finding more alerts, but determining what deserves attention
+first. Its collection, normalisation, enrichment and scoring pipeline shows
+practical capability across threat intelligence, vulnerability management, data
+engineering and risk-based prioritisation — and, importantly, an insistence that
+evidence should drive the decision.
+
+## So what?
+
+Security teams are not short of alerts; they are short of a defensible answer to
+one question: **what must we fix first, and why?**
+
+A few seconds of the product working: **[ThreatPulse demo on YouTube](https://youtu.be/2Hq5_dG9_J8)**
+
+[![ThreatPulse demo](https://img.youtube.com/vi/2Hq5_dG9_J8/hqdefault.jpg)](https://youtu.be/2Hq5_dG9_J8)
+
+### What problem this solves, and for whom
+
+Every catalogue a security team already has — the CISA KEV list, NVD, EPSS,
+vendor advisories, CERT feeds — answers *what exists*. None of them answers *what
+matters to us this week*. Ranking by CVSS alone over-weights theoretical bugs and
+under-weights the ones that are actually being exploited, so the worklist ends up
+sorted by a number that does not describe risk.
+
+ThreatPulse turns those inputs into one ranked worklist: **one record per CVE**,
+every contributing source attached to it, and a single transparent priority score
+whose factors and weights are published with the record. The answer can be
+reconstructed and defended, not just trusted.
+
+- **Security leaders and vulnerability managers** get a defensible order of work:
+  what to fix now, what to schedule, what to monitor — with the evidence behind
+  each position.
+- **SOC and threat-intelligence analysts** get triage that separates exploited,
+  corroborated vulnerabilities from the ones that merely exist.
+- **Engineers and architects** get a public, machine-readable, attributed API
+  (schema 1.0) rather than a PDF or a dashboard they have to scrape.
+- **Anyone auditing the reasoning** gets the model, the weights, the bands and
+  the source register, so a score can be checked rather than believed.
+
+It is not a scanner, not a SIEM and not an authority. It is the prioritisation
+layer between the feeds a team already has and the decision it has to make.
+
+## Methodology
+
+The complete, current description also lives at
+[threatpulse.iliadis.net/methodology](https://threatpulse.iliadis.net/methodology)
+and in [backend/docs/ARCHITECTURE.md](backend/docs/ARCHITECTURE.md). This section
+is the same method, in short.
+
+### The question it answers
+
+ThreatPulse exists to answer one question: **what deserves attention now — and
+why?** Every published threat carries its score, the factors behind that score and
+the evidence it rests on, so a decision can be reconstructed rather than taken on
+trust. The dashboard displays the score the pipeline produced; it never
+recalculates it and never re-ranks the list.
+
+### The pipeline
+
+`run_pipeline.py` is the only entry point. It runs seven stages in order and stops
+at the first one that cannot succeed. Two properties hold throughout: the run is
+**deterministic** (same inputs, same document) and **fail-closed** (anything
+uncertain is refused, not guessed).
+
+| Stage | What happens |
+| --- | --- |
+| **Collect** | 23 collector modules fetch each source over HTTPS from a separate server. Every collector reports `ok`, `degraded` or `failed`; a source that cannot be reached degrades to its last-known-good snapshot instead of destroying what the sources that did respond produced. |
+| **Normalise** | 21 normalisers, one per source family, turn payloads into typed observations (`source`, record id, timestamps, entities, TLP label). Feed content is untrusted, so every field is validated, bounded and sanitised; a record that cannot be trusted is rejected with a reason rather than coerced. |
+| **Correlate** | Observations about the same subject are merged into one intelligence object with all of their evidence attached. Only the highest-priority entity kind an observation carries is used, so one advisory naming two CVEs is not counted twice for the same reason. |
+| **Enrich** | MITRE ATT&CK, CAPEC and Sigma add technique, actor, CWE-route and detection-coverage context. Enrichment is context, never proof of activity: it cannot set exploitation status and cannot move a score on its own. |
+| **Score** | `threatpulse_priority_v0.3` scores every vulnerability threat from the evidence present (below). Every factor is optional and the weights actually used are published with the record. |
+| **Quality gate** | The exact bytes that would be sent are checked: schema 1.0 structure, provenance on every record, TLP markings, volume against a configured minimum and against the previous run, and request size. A refusal is a run failure, not a warning. |
+| **Publish** | The document is split so every request stays under 7 MiB, below a common 8 MB `post_max_size`. Every chunk carries the same publication id, so the API assembles one publication and upserts rather than duplicating. |
+
+### Identity and correlation
+
+A published threat's identifier is derived from **the CVE alone**:
+`sha256("threatpulse:cisa_kev:" + CVE)`, rendered as a UUID. The namespace is a
+compatibility constant kept from the KEV-only era, not the current source key, for
+three reasons that matter operationally:
+
+- a CVE first published from enrichment evidence keeps the same identifier when it
+  later enters the KEV catalogue, instead of creating a second record;
+- the same CVE reported by an advisory, a vendor PSIRT and the KEV list converges
+  on one object with three pieces of evidence, not three objects;
+- identity is deterministic, so re-running the pipeline cannot duplicate a threat
+  and a republication is an update rather than an insertion.
+
+Malware-family records and indicator clusters were retired on 2 November 2026, so
+every published threat today is keyed on a CVE. Groups keyed on anything else (an
+actor, a country) are counted and reported, not published.
+
+### The prioritisation model
+
+One model scores every vulnerability, whether or not it appears in the CISA KEV
+catalogue. It reads only evidence that actually exists: exploitation assessments,
+EPSS percentile, CVSS or a stated severity, independent corroboration, deadline
+pressure or an available fix, the source's own ransomware and forensic
+determinations, and how recent the signal is.
+
+| Factor | Weight | What it captures |
+| --- | --- | --- |
+| `exploitation` | 28% | Whether the threat is observed or assessed to be exploited. |
+| `epss` | 20% | Where the CVE sits in the EPSS distribution of exploitation probability. |
+| `impact` | 18% | Severity of the technical consequence. |
+| `evidence` | 10% | How many independent sources describe the same vulnerability. |
+| `urgency` | 8% | Remediation deadline pressure, such as a CISA due date. |
+| `ransomware` | 6% | Known or suspected ransomware campaign use. |
+| `recency` | 5% | How recently the signal appeared or was refreshed. |
+| `first_seen` | 3% | When ThreatPulse first collected it — not when it was published. |
+| `forensic` | 2% | Whether forensic triage is indicated. |
+
+**Every factor is optional.** A factor the evidence does not support contributes
+nothing and is not reported: `score_factors` names exactly what produced the
+number and `score_weights` holds only those weights. The score therefore *falls*
+when evidence is missing rather than being redistributed upwards, so a thin record
+scores low — which is the right answer for priority.
+
+Two rules keep the number honest:
+
+- **A refusal beats a guess.** Fewer than two independent sources raises
+  `InsufficientEvidence` — unless one of them is the CISA KEV catalogue, which is a
+  corroborated determination in its own right. So does the absence of any
+  exploitation, EPSS or impact signal. A record the model cannot support is not
+  published at all.
+- **Exploitation is never low.** A record whose exploitation factor is at or above
+  90 is floored at 50, so it cannot rank below an unremarkable record that merely
+  happens to carry a CVSS.
+
+The previous model (`threatpulse_priority_v0.1`, six factors, KEV-derived) still
+runs for KEV-shaped records and is published beside the current score as
+`metadata.legacy_score`. That is the audit trail for the unification: the change can
+be checked record by record and reversed without recomputing anything.
+
+### Bands
+
+The band is a label for the score, not a separate judgement. The published
+`severity` of a record *is* this band.
+
+| Score | Band | Guidance |
+| --- | --- | --- |
+| 90–100 | Critical | Top of the model — immediate attention. |
+| 75–89.99 | High | Strong signals — schedule action now. |
+| 50–74.99 | Medium | Relevant, but not yet urgent. |
+| 25–49.99 | Low | Monitor. |
+| 0–24.99 | Informational | Context only. |
+
+On the 2 November 2026 publication (3,558 records) that produced 3.5% critical,
+27.5% high, 24% medium, 10% low and 35% informational. A narrow critical band is
+the point — a label covering a quarter of the catalogue is not a prioritisation
+anyone can act on — and the large informational group is the honest cost of
+publishing thin records rather than withholding them. The thresholds are
+**provisional**: they were recalibrated when the models were unified, because the
+old 85/70 split labelled 23% of a publication "critical".
+
+
+
+### Provenance and the handling rule
+
+- **Every source is declared before it may be read.** The register in
+  `backend/data/attribution.json` records each source's provider, licence,
+  attribution text, TLP default and current contribution. An undeclared source is
+  refused outright — an absence of paperwork is not permission — and the register is
+  published at `/api/cti/v1/attribution.php` and on the Sources page, including the
+  sources deliberately *not* ingested.
+- **Attribution is provenance, not endorsement.** Listing a source states where a
+  signal came from, not that the source endorses ThreatPulse or the reverse.
+- **Each threat carries its evidence.** Source key, source name, source record
+  identifier and retrieval timestamp are stored per record. A record that rests on
+  several sources says so, rather than merging them into one unattributed claim.
+- **Only TLP:CLEAR/WHITE is ingested.** ThreatPulse publishes to an open,
+  unauthenticated dashboard, so it may only republish material released for
+  unrestricted public use. TLP:GREEN, AMBER, AMBER+STRICT and RED are never ingested,
+  stored or republished. An item marked more restrictively than its source default is
+  rejected with a reason, so one over-marked advisory cannot discard the rest of a
+  feed; an unrecognised marking is refused rather than assumed public.
+- **A failed source is reported, not hidden.** The run records `ok`, `degraded` or
+  `failed` per source, with the observation count that justifies the verdict and the
+  failure reason. That report travels with the publication (`source_health.php`),
+  because "why is today's count low?" is a question the reader is entitled to ask.
+
+### The gate, and what reaches the public
+
+The quality gate validates the exact bytes that would be transmitted and refuses
+the run rather than the record: schema structure, provenance on every record, TLP
+markings, volume against the configured minimum and against the previous
+publication, and request size. A refused publication is never sent, and a failed
+run is visible in the service journal.
+
+What is published is a complete snapshot — `data/latest_publication.json`, schema
+1.0, replaced wholesale — served by a read-only API: threats, threat by id or CVE,
+vulnerabilities, sources, the attribution register, publications, the field-level
+delta against the previous publication, source health and status, plus a
+machine-readable discovery document. Every response carries provenance; timestamps
+come from the pipeline and are interpreted and displayed as UTC, so a viewer's time
+zone cannot shift a date silently; API responses are cached for 60 seconds and the
+dashboard reuses that window rather than forcing repeated requests.
+
+### What the interface does not do
+
+The frontend is a presentation layer, not a second opinion. It does not recalculate
+the score, re-rank the list, infer a severity from a CVSS, or fill in a missing
+factor. Values that are absent are shown as absent, and a record with no factor
+breakdown says so instead of rendering an empty grid. That is deliberate: if the
+interface invented a number, the published evidence would no longer explain the
+decision.
+
+### Limits
+
+- The weights and thresholds are a **documented judgement**, not a validated ground
+  truth. They are published so they can be argued with, and the bands are marked
+  provisional.
+- The score is a **general-purpose priority**, not an organisational risk score: it
+  has no asset inventory, business context or exposure data behind it. It tells you
+  what to look at first, not what your organisation would lose.
+- **Coverage is bounded by the register.** The Sources page is the authoritative
+  list of what is and is not ingested; source health explains a thin day.
+- Enrichment (ATT&CK, CAPEC, Sigma) is context, never evidence of activity.
+- Third-party data can be wrong, incomplete or stale. ThreatPulse supports, and does
+  not replace, professional judgement; findings should be validated against the
+  organisation's own vulnerability-management, threat-intelligence and risk
+  processes before action.
+
+---
+
+![ThreatPulse — actionable threat intelligence for a more resilient enterprise](./threatpulse-banner.png)
 
 Prioritise the vulnerabilities and threats that deserve attention first, using
 normalised, scored threat intelligence.
@@ -30,6 +258,7 @@ document: [api/index.html](api/index.html).
 | `backend/` | Python pipeline: collect, normalise, correlate, enrich, score, quality gate, publish. Standard library only. |
 | `deployment/` | Deployment checklist, origin restriction, the build-time stamping script and systemd/MySQL assets. |
 | `api-tests/` | Contract suite that exercises the API against a local PHP + SQLite harness. |
+| `social-preview.jpg` | 1280 × 640 image to upload as the repository's GitHub social preview (Settings → Social preview); the same artwork is the site's `og:image` and the dashboard hero. |
 
 ## Quick start
 
@@ -70,12 +299,15 @@ own current terms; verify them before relying on a source commercially.
 
 ## Security
 
-Please report vulnerabilities privately, not in a public issue. See
-[SECURITY.md](SECURITY.md).
+Please report vulnerabilities privately, not in a public issue. The policy, the
+response targets, the safe-harbour terms and the scope are in
+[SECURITY.md](SECURITY.md); the machine-readable contact defined by RFC 9116 is
+served at
+[`/.well-known/security.txt`](https://threatpulse.iliadis.net/.well-known/security.txt).
 
 ## Licence
 
-Copyright 2026 Dr. John Iliadis. Licensed under the
+Copyright 2026 Dr. John ILIADIS. Licensed under the
 [Apache License 2.0](LICENSE); see [NOTICE](NOTICE) for the required copyright
 statement and trademark notes.
 

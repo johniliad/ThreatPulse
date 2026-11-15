@@ -1,8 +1,12 @@
 # ThreatPulse — static frontend (React + Vite) deployed on Apache / cPanel.
 #
 # The PHP API lives in /api/cti/v1/ and is served by PHP directly: it must
-# never be rewritten to index.html, and its own response headers (set in PHP)
-# are deliberately left untouched here.
+# never be rewritten to index.html. Its security headers are set in
+# api/.htaccess, which overrides the values below for that tree.
+
+# No directory listings: anything that would otherwise list a folder answers
+# 403 instead, so a guessed directory name reveals nothing.
+Options -Indexes
 
 # ---------------------------------------------------------------------------
 # CLOUDFLARE-ONLY ACCESS — always-on requirement.
@@ -57,16 +61,19 @@ RewriteRule ^ - [F,L]
 </IfModule>
 
 <IfModule mod_headers.c>
-  # Vite fingerprints every build asset, so they can be cached indefinitely.
+  # Only /assets/ is content-fingerprinted by Vite, so only /assets/ may be
+  # immutable. A file in public/ keeps its name across deploys, and marking it
+  # immutable pins whatever a browser fetched first for a year — which is how a
+  # replaced dashboard image stayed old in returning browsers.
   <FilesMatch "\.(?:js|css|woff2?|svg|png|jpe?g|webp|avif|ico)$">
-    Header set Cache-Control "public, max-age=31536000, immutable"
+    Header set Cache-Control "public, max-age=31536000, immutable" "expr=%{REQUEST_URI} =~ m#^/assets/#"
   </FilesMatch>
 
-  # Except the favicon, which is served from a fixed path and is not
-  # fingerprinted: an immutable cache would pin a corrected icon in returning
-  # browsers for a year.
-  <FilesMatch "^favicon\.(?:ico|png|svg)$">
-    Header set Cache-Control "public, max-age=86400"
+  # Everything else static — icons, the Open Graph image, anything a future
+  # public/ file adds — gets a day, so a replacement at the same URL reaches
+  # visitors and the CDN within a day instead of never.
+  <FilesMatch "\.(?:js|css|woff2?|svg|png|jpe?g|webp|avif|ico)$">
+    Header set Cache-Control "public, max-age=86400" "expr=%{REQUEST_URI} !~ m#^/assets/#"
   </FilesMatch>
 
   # The HTML shell must be revalidated so new deploys are picked up.
@@ -74,17 +81,37 @@ RewriteRule ^ - [F,L]
     Header set Cache-Control "public, max-age=0, must-revalidate"
   </FilesMatch>
 
-  # Security headers for static responses only (never for .php, which sets
-  # its own headers).
-  <FilesMatch "\.(?:html|js|css|svg|txt|xml)$">
-    Header set X-Content-Type-Options "nosniff"
-    Header set Referrer-Policy "strict-origin-when-cross-origin"
-    Header set X-Frame-Options "DENY"
-    Header set Permissions-Policy "camera=(), microphone=(), geolocation=()"
-  </FilesMatch>
+  # -------------------------------------------------------------------------
+  # SECURITY HEADERS — every response in this tree, across the whole site.
+  #
+  # `always` rather than `set`: `set` is skipped for the error documents Apache
+  # generates itself (403, 404, 500), which is exactly where a header check
+  # otherwise fails. /api/ overrides these values in its own .htaccess.
+  #
+  # The policy has no 'unsafe-inline' and no wildcard source. index.html does
+  # carry one inline <script type="application/ld+json"> block, but that is a
+  # data block and not executable script, so script-src 'self' does not block
+  # it and no hash or nonce is needed. Inline style attributes were removed
+  # from both HTML documents, so style-src needs no exception either.
+  # -------------------------------------------------------------------------
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "DENY"
+  Header always set Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; manifest-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; upgrade-insecure-requests"
+  Header always set Referrer-Policy "no-referrer"
+  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+  Header always set X-Permitted-Cross-Domain-Policies "none"
+  Header always unset X-Powered-By
 
-  # Optional hardening — enable after confirming the site still works:
-  # Header set Content-Security-Policy "default-src 'self'; connect-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
+  # HSTS only on a TLS response: sent over plain HTTP it is ignored, and a
+  # browser that has seen `max-age=0` keeps HSTS disabled for that host.
+  Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains" "expr=%{HTTPS} == 'on'"
+
+  # Cookies emitted by this origin get the flags whether or not the script that
+  # set them remembered. `edit` appends only when the flag is absent, so a
+  # cookie that is already configured correctly is left exactly as it is.
+  Header always edit Set-Cookie "^(?i)(?!.*;\s*httponly)(.*)$" "$1; HttpOnly"
+  Header always edit Set-Cookie "^(?i)(?!.*;\s*secure)(.*)$" "$1; Secure" "expr=%{HTTPS} == 'on'"
+  Header always edit Set-Cookie "^(?i)(?!.*;\s*samesite)(.*)$" "$1; SameSite=Lax"
 </IfModule>
 
 <IfModule mod_deflate.c>

@@ -3,6 +3,17 @@
 declare(strict_types=1);
 
 /*
+ * Security headers for the whole /api/ tree are set in api/.htaccess, so they
+ * also cover the responses Apache generates without running PHP. This file adds
+ * what depends on the request: the CORS allowlist and the cookie attributes.
+ * See http.php.
+ */
+
+require_once __DIR__ . '/http.php';
+
+threatpulse_harden_session_cookies();
+
+/*
  * ThreatPulse public API — what changed
  *
  * The delta between the publication being served and the one before it.
@@ -30,9 +41,7 @@ declare(strict_types=1);
  */
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    header('Access-Control-Allow-Origin: *');
-    header('Access-Control-Allow-Methods: GET, OPTIONS');
-    header('Access-Control-Allow-Headers: Content-Type, Accept');
+    threatpulse_send_cors_headers();
     http_response_code(204);
     exit;
 }
@@ -56,17 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 }
 
 header('Content-Type: application/json; charset=utf-8');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, Accept');
-
-header('X-Content-Type-Options: nosniff');
-header('X-Frame-Options: DENY');
-header('Referrer-Policy: no-referrer');
-
-header(
-    'Permissions-Policy: camera=(), microphone=(), geolocation=()'
-);
+threatpulse_send_cors_headers();
 
 header('Cache-Control: public, max-age=60');
 

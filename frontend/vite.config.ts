@@ -8,8 +8,8 @@ import react from '@vitejs/plugin-react';
  * PHP API, so the API is consumed same-origin via VITE_API_BASE_URL.
  *
  * During development the API is proxied to the deployed host. This is not
- * optional: publications.php returns no CORS headers, so a direct
- * cross-origin call from the dev server would be blocked by the browser.
+ * optional: the browser must see a same-origin request, and the deployed API
+ * answers CORS only for the product's own hostnames.
  */
 
 const API_TARGET = 'https://threatpulse.iliadis.net';

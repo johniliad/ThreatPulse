@@ -269,7 +269,8 @@ async function runPreflight(httpGet) {
     }
 
     try {
-        const res = await httpGet('');
+        /* The script by name: the directory only works if DirectoryIndex allows it. */
+        const res = await httpGet('index.php');
 
         contract.discovery = res.json?.capabilities?.cve_to_threat === true;
 
@@ -639,7 +640,7 @@ async function runMatrix(httpGet) {
     }, ['threatRelationship', 'cveFilter']);
 
     await test('T18 index.php advertises the new capability', async () => {
-        const res = await httpGet('');
+        const res = await httpGet('index.php');
 
         assertEqual(res.status, 200, 'HTTP status');
         assertEqual(res.json.capabilities?.cve_to_threat, true, 'capabilities.cve_to_threat');

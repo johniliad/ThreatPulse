@@ -29,3 +29,8 @@ deployment/build/
 
 # MD Requirements
 requirements/
+
+# Source artwork for the generated images (three formats of the same banner,
+# ~9 MB). What ships — threatpulse-banner.png, frontend/public/og-image.jpg,
+# frontend/src/assets/threatpulse-hero.jpg, social-preview.jpg — is committed.
+pics-source/
