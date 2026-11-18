@@ -170,7 +170,7 @@ export function AboutPage() {
           </ul>
           <p className="tp-meta tp-meta--small">
             Engineering evidence is dated rather than continuously restated: at
-            2 November 2026 the backend carried 624 automated tests and the frontend
+            2 November 2026 the backend carried 629 automated tests and the frontend
             112, with the PHP API endpoints lint-clean and the published API contract
             verified end to end.
           </p>

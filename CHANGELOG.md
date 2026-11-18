@@ -21,6 +21,9 @@ All notable changes to ThreatPulse are recorded here. The format follows
   `invalid-response`, and `403` has its own message.
 - `api-tests/verify-api.mjs` probes `index.php` by name, so the contract suite no
   longer reports a deployed enhancement as missing.
+- Corrected the Cloudflare edge HSTS configuration so public responses now return
+  `Strict-Transport-Security: max-age=31536000; includeSubDomains`, consistent with
+  the origin security policy.
 
 ### Security
 

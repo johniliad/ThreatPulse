@@ -2,13 +2,12 @@
 
 ## About
 
-ThreatPulse demonstrates my ability to turn raw threat intelligence into
-prioritised security decisions. I designed it around the problem security leaders
-actually face: not finding more alerts, but determining what deserves attention
-first. Its collection, normalisation, enrichment and scoring pipeline shows
-practical capability across threat intelligence, vulnerability management, data
-engineering and risk-based prioritisation — and, importantly, an insistence that
-evidence should drive the decision.
+ThreatPulse is an independently developed cyber threat-intelligence and
+vulnerability-prioritisation platform designed to turn heterogeneous threat
+signals into transparent, evidence-based remediation priorities. Built by Dr.
+John Iliadis, it combines threat intelligence, data engineering,
+risk-based scoring and security governance into a deterministic, auditable
+decision system.
 
 ## So what?
 
@@ -272,7 +271,7 @@ npm run build          # type-check, bundle, stamp the origin secret
 
 # pipeline
 cd backend
-python3 -m unittest discover -s tests -t .   # 629 tests
+python3 -m unittest discover -s tests -t .   # run the backend test suite
 python3 run_pipeline.py --dry-run            # collect and score, transmit nothing
 
 # API contract
